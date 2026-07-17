@@ -1,0 +1,99 @@
+use_default_settings: true
+
+general:
+  debug: false
+  instance_name: "SearXNG"
+
+server:
+  secret_key: "edd0419ee697e2c91cc0886fcb92fb21d098cd9ae8361c3a180737ef960c83ba"
+  limiter: false
+  image_proxy: false
+  bind_address: "0.0.0.0:8080"
+  # Allow more concurrent engine requests
+  worker_count: 8
+
+redis:
+  url: redis://searxng-redis:6379/0
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "en"
+  # Cache results for 60 seconds - avoids hammering engines on repeated queries
+  max_ban_time_on_fail: 120
+  ban_time_on_fail: 5
+  formats:
+    - html
+    - json
+
+ui:
+  static_use_hash: true
+  # No UI overhead needed - API only usage
+  infinite_scroll: false
+  default_theme: simple
+
+enabled_plugins:
+  - 'Hash plugin'
+  - 'Self Information'
+  - 'Tracker URL remover'
+  - 'Ahmia blacklist'
+
+engines:
+  - name: duckduckgo
+    disabled: false
+    weight: 1
+    timeout: 4.0
+
+  - name: bing
+    disabled: false
+    weight: 1
+    timeout: 4.0
+
+  - name: brave
+    disabled: false
+    weight: 1
+    timeout: 3.0        # was 4.0 — brave is fast, no need
+
+  - name: google
+    disabled: false
+    weight: 1
+    timeout: 5.0
+
+  - name: wikipedia
+    disabled: false
+    weight: 2
+    timeout: 3.0
+
+  # Enable additional independent-index engines for result diversity
+  - name: startpage
+    disabled: false
+    weight: 1
+    timeout: 5.0
+
+  - name: qwant
+    disabled: false
+    weight: 1
+    timeout: 4.0
+
+  - name: mojeek
+    disabled: false
+    weight: 1
+    timeout: 4.0
+
+  # Disable engines that are slow or frequently blocked to reduce noise
+  - name: google news
+    disabled: true
+  - name: bing news
+    disabled: true
+  - name: yahoo
+    disabled: true
+
+  - name: stackoverflow
+    categories: [general, q&a]   # adds it to general so it fires on default searches
+    weight: 2                     # boost it — SO answers are high signal for technical queries
+    timeout: 3.0
+
+  - name: superuser
+    categories: [general, q&a]
+    weight: 1
+    timeout: 3.0

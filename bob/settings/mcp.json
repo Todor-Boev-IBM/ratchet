@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "markitdown": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--user",
+        "1000:1001",
+        "--security-opt",
+        "label=disable",
+        "-v",
+        "/home/tobo:/home/tobo",
+        "mcp/markitdown"
+      ],
+      "type": "stdio",
+      "alwaysAllow": ["convert_to_markdown"]
+    },
+    "searxng": {
+      "command": "npx",
+      "args": ["-y", "mcp-searxng"],
+      "env": { "SEARXNG_URL": "http://localhost:58080" },
+      "type": "stdio",
+      "alwaysAllow": ["searxng_web_search", "web_url_read"]
+    },
+    "tavily": {
+      "command": "npx",
+      "args": ["-y", "tavily-mcp"],
+      "env": { "TAVILY_API_KEY": "add your own" },
+      "alwaysAllow": ["tavily_search", "tavily_extract", "tavily_crawl", "tavily_map", "tavily_research"]
+    }
+  }
+}
