@@ -1,0 +1,13 @@
+{
+    "name": "docmgr",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "description": "Read-only index builder and triage surface for a docs/features tree",
+    "bin": {
+        "docmgr": "./docmgr.mjs"
+    },
+    "scripts": {
+        "test": "node --test"
+    }
+}
