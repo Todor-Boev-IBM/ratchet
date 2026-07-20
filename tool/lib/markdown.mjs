@@ -46,7 +46,7 @@ export function walkMarkdownFiles(dir) {
  *
  *   ---
  *   title: "Some Feature"
- *   intent: active
+ *   status: active
  *   ---
  *   # The actual markdown content starts here
  *

@@ -4,9 +4,9 @@
 // feature.md anchor plus optional proposal.md / plan.md.
 //   • reindex  — regenerates docs/index.md from the features. Never writes a
 //                feature file — the index is the only output.
-//   • check    — read-only structural audit (feature.md present, title + intent
+//   • check    — read-only structural audit (feature.md present, title + status
 //                valid, at least one artifact, plan phases present).
-//   • triage   — read-only view of open features (parked/active), oldest-touched
+//   • triage   — read-only view of open features (draft/active), oldest-touched
 //                first in weekly age bands, for the Triage skill to consume.
 //
 // Model
@@ -16,12 +16,14 @@
 //     features/<slug>/plan.md       -> optional
 //   feature.md frontmatter (flat key: value pairs only, see lib/markdown.mjs):
 //     title: <string>    required, authored.
-//     intent: <parked|active|done|abandoned>   the ONLY stored state. Everything
+//     status: <draft|active|done|abandoned>   the ONLY stored state. Everything
 //                        else (which artifacts exist, plan completion, last
 //                        touched) is derived, never written back.
 //   plan.md progress marker: a `## Phases` section whose `### Phase ...` sub-
-//     headings each carry a `✅` (done) / `⏳` (in progress) / no marker (not
-//     started) status. Completion = `✅` phases over total phase headings.
+//     headings each carry a `[done]` (done) / `[wip]` (in progress) / no
+//     token (not started) text token. Trailing emoji (e.g. `[done] ✅`) are
+//     decorative — the tooling only looks at the text token. Completion =
+//     `[done]` phases over total phase headings.
 //
 // File layout
 //   lib/markdown.mjs  — generic helpers (find *.md files, parse frontmatter).
@@ -98,7 +100,7 @@ function triage(docsDir) {
         ? `plan ${feature.planCompletion.checked}/${feature.planCompletion.total}`
         : 'no plan phases'
       const flag = actionable ? ' [actionable]' : ''
-      console.log(`  - ${feature.slug} (${feature.intent}) — ${artifacts} — ${plan} — ${Math.floor(ageDays)}d${flag}`)
+      console.log(`  - ${feature.slug} (${feature.status}) — ${artifacts} — ${plan} — ${Math.floor(ageDays)}d${flag}`)
     }
   }
   return 0

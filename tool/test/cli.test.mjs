@@ -22,10 +22,10 @@ function buildFixture() {
     for (const [name, body] of Object.entries(files)) writeFileSync(join(dir, name), body)
   }
   write('alpha', {
-    'feature.md': '---\ntitle: "Alpha"\nintent: active\n---\nAlpha purpose.\n',
+    'feature.md': '---\ntitle: "Alpha"\nstatus: active\n---\nAlpha purpose.\n',
     'plan.md': '## Phases\n\n### Phase 1: one ✅\n### Phase 2: two ✅ 2026-07-19\n',
   })
-  write('beta', { 'feature.md': '---\ntitle: "Beta"\nintent: parked\n---\nBeta purpose.\n', 'proposal.md': '# Beta\n' })
+  write('beta', { 'feature.md': '---\ntitle: "Beta"\nstatus: draft\n---\nBeta purpose.\n', 'proposal.md': '# Beta\n' })
   return docs
 }
 
@@ -96,6 +96,6 @@ test('triage: lists open features oldest-first', () => {
   const out = run(['triage', '--docs', docs])
   assert.match(out, /triage: 2 open feature\(s\)/)
   assert.match(out, /alpha \(active\)/)
-  assert.match(out, /beta \(parked\)/)
+  assert.match(out, /beta \(draft\)/)
   rmSync(docs, { recursive: true, force: true })
 })

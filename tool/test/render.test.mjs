@@ -7,7 +7,7 @@ function feat(overrides = {}) {
   return {
     slug: 's',
     title: 'T',
-    intent: 'active',
+    status: 'active',
     hasProposal: false,
     hasPlan: false,
     planCompletion: null,
@@ -16,13 +16,13 @@ function feat(overrides = {}) {
   }
 }
 
-test('renderIndex: groups by intent in INTENTS order with derived facts', () => {
+test('renderIndex: groups by status in INTENTS order with derived facts', () => {
   const features = [
-    feat({ slug: 'b', title: 'Beta', intent: 'parked', hasProposal: true }),
+    feat({ slug: 'b', title: 'Beta', status: 'draft', hasProposal: true }),
     feat({
       slug: 'a',
       title: 'Alpha',
-      intent: 'active',
+      status: 'active',
       hasProposal: true,
       hasPlan: true,
       planCompletion: { checked: 1, total: 3 },
@@ -30,12 +30,12 @@ test('renderIndex: groups by intent in INTENTS order with derived facts', () => 
   ]
   const { content, summary } = renderIndex(features)
 
-  // parked section renders after active (INTENTS order: parked, active, ...)
-  // INTENTS = parked, active, done, abandoned -> parked heading precedes active
-  assert.ok(content.indexOf('## parked (1)') < content.indexOf('## active (1)'))
+  // draft section renders before active (INTENTS order: draft, active, ...)
+  // INTENTS = draft, active, done, abandoned -> draft heading precedes active
+  assert.ok(content.indexOf('## draft (1)') < content.indexOf('## active (1)'))
   assert.match(content, /\| \[Alpha\]\(features\/a\/feature\.md\) \| proposal, plan \| 1\/3 \| 2026-06-01 \|/)
   assert.match(content, /\| \[Beta\]\(features\/b\/feature\.md\) \| proposal \| — \| 2026-06-01 \|/)
-  assert.deepEqual(summary, ['  parked: 1', '  active: 1'])
+  assert.deepEqual(summary, ['  draft: 1', '  active: 1'])
 })
 
 test('renderIndex: empty feature set renders only the header', () => {

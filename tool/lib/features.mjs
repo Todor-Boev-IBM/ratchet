@@ -3,7 +3,7 @@
 // The feature model: what a "feature" is (a directory under docs/features/
 // holding a required feature.md anchor plus optional proposal.md / plan.md),
 // and the facts derived from it. A feature stores exactly one piece of state —
-// the `intent` field on feature.md; everything else (which artifacts exist,
+// the `status` field on feature.md; everything else (which artifacts exist,
 // how far a plan has progressed, when the feature was last touched) is derived
 // here and never written back.
 //
@@ -18,10 +18,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseFrontmatter } from './markdown.mjs'
 
-// The closed vocabulary of feature intents. `parked`/`active` are "open"
-// intents Triage works on; `done`/`abandoned` retire a feature from the
+// The closed vocabulary of feature statuses. `draft`/`active` are "open"
+// statuses Triage works on; `done`/`abandoned` retire a feature from the
 // working list. This is the only stored state a feature carries.
-export const INTENTS = ['parked', 'active', 'done', 'abandoned']
+export const INTENTS = ['draft', 'active', 'done', 'abandoned']
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -60,13 +60,14 @@ function firstLine(body) {
 
 // Plan completion from the `## Phases` section inside a plan.md body. Each
 // `### Phase ...` sub-heading in that section is one phase; a phase counts as
-// done when its heading carries the `✅` marker (`⏳` = in progress, no marker =
-// not started, neither of which is "done"). Phases elsewhere in the document
-// are ignored. Returns `{ checked, total }`, or `null` when there is no
-// machine-readable signal (no `## Phases` section, or one with no phase
-// headings) — deliberately not `{ checked: 0, total: 0 }`, so "no signal" is
-// distinguishable from "0 done".
-const DONE_MARKER = '\u2705' // ✅
+// done when its heading contains the text token `[done]` (`[wip]` = in
+// progress, no token = not started, neither of which is "done"). Any trailing
+// emoji after the token (e.g. `[done] ✅`) is decorative and ignored. Phases
+// elsewhere in the document are ignored. Returns `{ checked, total }`, or
+// `null` when there is no machine-readable signal (no `## Phases` section, or
+// one with no phase headings) — deliberately not `{ checked: 0, total: 0 }`,
+// so "no signal" is distinguishable from "0 done".
+const DONE_MARKER = '[done]'
 
 export function derivePlanCompletion(planBody) {
   const lines = planBody.split(/\r?\n/)
@@ -136,7 +137,7 @@ function loadFeature(dir, slug) {
     slug,
     hasFeatureFile,
     title: data.title || null,
-    intent: data.intent || null,
+    status: data.status || null,
     purpose: firstLine(body),
     hasProposal,
     hasPlan,
@@ -175,10 +176,10 @@ export function validateFeatures(features) {
       continue
     }
     if (!f.title) problems.push(`no title: features/${f.slug}/feature.md`)
-    if (!f.intent) {
-      problems.push(`no intent: features/${f.slug}/feature.md`)
-    } else if (!INTENTS.includes(f.intent)) {
-      problems.push(`invalid intent '${f.intent}': features/${f.slug}/feature.md (allowed: ${INTENTS.join(', ')})`)
+    if (!f.status) {
+      problems.push(`no status: features/${f.slug}/feature.md`)
+    } else if (!INTENTS.includes(f.status)) {
+      problems.push(`invalid status '${f.status}': features/${f.slug}/feature.md (allowed: ${INTENTS.join(', ')})`)
     }
     if (!f.hasProposal && !f.hasPlan) {
       problems.push(`no proposal.md or plan.md: features/${f.slug}/`)
@@ -193,7 +194,7 @@ export function validateFeatures(features) {
 // --- triage ------------------------------------------------------------------
 
 function isOpen(feature) {
-  return feature.intent === 'parked' || feature.intent === 'active'
+  return feature.status === 'draft' || feature.status === 'active'
 }
 
 function isComplete(feature) {
@@ -205,7 +206,7 @@ function bandLabel(index) {
   return `${index * 7}\u2013${(index + 1) * 7} days`
 }
 
-// The triage view: open-intent features only (parked/active), ordered
+// The triage view: open-status features only (draft/active), ordered
 // oldest-touched first, grouped into one-week age bands. Because the input is
 // sorted oldest-first and bands are emitted in encounter order, the returned
 // buckets run stalest-first, and within each bucket entries are oldest-first.
