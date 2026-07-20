@@ -1,18 +1,4 @@
 services:
-  redis:
-    image: redis:7-alpine
-    container_name: searxng-redis
-    command: redis-server --save "" --appendonly no --maxmemory 256mb --maxmemory-policy allkeys-lru
-    restart: unless-stopped
-    networks:
-      - searxng-net
-    cap_drop:
-      - ALL
-    cap_add:
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-
   searxng:
     image: searxng/searxng:latest
     container_name: searxng
@@ -24,8 +10,6 @@ services:
       - SEARXNG_SECRET_KEY=edd0419ee697e2c91cc0886fcb92fb21d098cd9ae8361c3a180737ef960c83ba
     networks:
       - searxng-net
-    depends_on:
-      - redis
     restart: unless-stopped
     cap_drop:
       - ALL
