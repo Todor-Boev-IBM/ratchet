@@ -17,28 +17,21 @@ Derive the feature to plan from the user's request. Store the plan as
 
 ## Core Principles
 
-**High-Level Planning:**
+Establish direction, constraints, and critical details — the plan sets the contract, not the implementation.
 
-- Establish direction, constraints, and critical details
-- Use pseudo-code to clarify intent, not dictate implementation
-- List what changes (APIs, interfaces), not line-by-line how
-- Define phases and goals, not exhaustive task lists
+**Include the contract, not the implementation:**
 
-**Appropriate Level of Detail:**
+- API signatures and types — Yes, these are the contract
+- Pseudo-code for non-obvious logic — Yes, to clarify intent (not a full algorithm)
+- State transitions that matter — Yes, they are architectural constraints
+- Step-by-step instructions and file-by-file change lists — No, these emerge during coding
+- Detailed test specifications — No, scenario names are enough
 
-- API signatures: Yes — these are contracts
-- Pseudo-code for non-obvious logic: Yes — clarifies intent (3–5 lines; not a full algorithm)
-- State transitions that matter: Yes — architectural constraints
-- Step-by-step implementation instructions: No — emerges during coding
-- File-by-file change lists: No — agent figures this out
-- Detailed test specifications: No — scenario names are enough
-
-**Architecture-First:**
+**Architecture-first:**
 
 - Reference existing architectural documentation
-- Identify patterns and protocols involved
-- Call out constraints and trade-offs
-- Consider system-wide implications
+- Identify the patterns and protocols involved
+- Call out constraints, trade-offs, and system-wide implications
 
 ---
 
@@ -77,32 +70,33 @@ When spawning, instruct the sub-agent to prefer `codegraph_explore` over raw `re
 - Similar prior implementations to use as reference
 - Testing approach and conventions used nearby
 
-### Step 2: Challenge
+### Step 2: Confirm readiness
 
-Evaluate the feature against the system as you understand it. Answer these questions honestly:
+By the time you reach a plan, the _why_ is already settled — in this loaded session or in a
+proposal. This step does not design the feature; it confirms you hold enough grounding to plan
+and refuses to paper over it if you don't.
 
-- Should this feature exist at all, or is there a simpler or more natural alternative?
-- Does the proposed approach fit the existing architecture, or does it degrade it?
-- Are the requirements clear enough to proceed?
+Check three things honestly:
 
-**If the feature is a bad idea** — it degrades the system, there is a more natural solution,
-or it is unreasonable given the architecture — **stop. Do not write a plan.** Push back
-in-chat with your counter-arguments and alternative suggestions. This is the whole point of
-the challenge step: prevent the system from being made worse.
+- Is the why actually available right now (in context or a proposal)? If you'd have to invent
+  it to write the plan, it isn't there.
+- Do you see a way this degrades the architecture that the loaded context never addressed?
+- Are the requirements concrete enough to structure a _how_?
 
-**If requirements are ambiguous:** stop here, ask the user for clarification, and do not
-proceed until you have an answer.
+**If any fails — the why is missing, you spot an unaddressed problem, or requirements are
+ambiguous — stop. Do not write the plan.** Push back in chat: this is the signal that the
+session skipped a step and needs clarification or a proposal first, not that you should fill
+the gap yourself.
 
-**If the feature is sound:** write the Approach section now — inline in chat, before the plan
-document. It must contain: why this approach is right, and any alternatives considered and
-rejected (2–4 sentences). This is mandatory output — it is the proof that the challenge
-happened. Do not proceed to Step 3 until it is written.
+**If all hold:** you have the grounding. You do not need a proposal — if you deliberately
+skipped one, the _why_ stays in this session by your choice. Either way, the plan itself will
+carry your agent-optimized version of it (Feature Overview, below). Proceed to Step 3.
 
 ### Step 3: Write the Plan
 
 Produce the plan document with these sections in order: Feature Overview, Architecture Impact,
 API Changes, Critical Logic and Decisions, Testing Approach, Phases. Do not
-begin this step until Step 2 is complete and the Approach section is written.
+begin this step until Step 2 is complete and the why-grounding is confirmed.
 
 ### Step 4: Sweep for Blockers and Assumptions
 
@@ -123,12 +117,18 @@ wanted.
 
 ## Plan Document Structure
 
-The plan document contains these sections in order. The Approach section is written in chat
-during Step 2 and is **not** included in the plan document.
+The plan document contains these sections in order. It is written for a single reader — the
+agent that will execute it. That includes its _why_: the plan carries the agent-facing
+grounding it needs to implement correctly, but not the human-facing design rationale
+(alternatives weighed and rejected) — that belongs in a proposal when you choose to write one.
 
 #### 1. Feature Overview
 
-2–3 sentences: what will be built and why it matters.
+The agent-facing _why-grounding_ for this plan: what will be built, and the intent behind it —
+the goal a coder must keep in view to make implementation choices land right. Optimize it for
+the executing agent's own consumption; if a proposal already states the why, restate it here in
+agent form rather than linking out. Keep it to a few sentences of intent — not a design debate.
+Rejected alternatives belong in a proposal, not here.
 
 #### 2. Architecture Impact
 
@@ -180,9 +180,13 @@ when X happens:
     do behavior 2
 ```
 
-Design decisions:
+Implementation decisions (execution-relevant only):
 
-- Decision: [choice] — [rationale]
+- Decision: [choice] — [why a coder must honor it while building]
+
+Design rationale — _why this approach over the alternatives_ — belongs in the proposal, not
+here. Keep this list to choices that constrain implementation: ordering, error-handling
+strategy, a coordination pattern.
 
 Keep pseudo-code to 3–5 lines. Focus on: non-obvious control flow, state transitions, error
 handling strategies, coordination patterns.
@@ -197,7 +201,7 @@ High-level only:
 
 #### 6. Phases
 
-Break work into 3–5 major phases, written as `### Phase <number>: Name` sub-headings under a
+Break work into 3–7 major phases, written as `### Phase <number>: Name` sub-headings under a
 `## Phases` container. The container heading text must begin with `Phases` so `docmgr` can
 find it and derive completion; each phase is a `### Phase` heading with its goal and
 deliverable as prose beneath it:
@@ -209,7 +213,7 @@ deliverable as prose beneath it:
 
 Goals:
 
-- high-level intent (2–3 bullets max)
+- high-level intent (2–5 bullets max)
 
 Deliverable: how you know it's done
 
@@ -257,29 +261,6 @@ The plan should be:
 - **Actionable** — clear phases with measurable completion criteria
 - **Minimal** — only critical details that must be decided upfront
 
-## Critical Guidelines
-
-**DO:**
-
-- Write the Approach section in chat during Step 2 — never skip it
-- List API changes clearly (types, signatures)
-- Use pseudo-code for non-obvious logic (3–5 lines max)
-- Identify architectural constraints and patterns
-- Reference existing documentation
-- Break work into 3–5 phases with clear deliverables
-- State key design decisions with rationale
-
-**DO NOT:**
-
-- Skip the Approach section
-- Write real code in the plan — pseudo-code for intent only
-- Write detailed implementation instructions
-- Enumerate every file that will be modified
-- Create exhaustive step-by-step task lists
-- Write pseudo-code longer than ~5 lines
-- Specify detailed test scenarios
-- Add Open Questions that can be resolved during coding
-
 ## Register the plan (docmgr)
 
 A plan lives inside a feature directory. When you write it:
@@ -309,3 +290,6 @@ A plan lives inside a feature directory. When you write it:
    ```
    node ~/.bob/tools/docmgr.mjs reindex
    ```
+
+   If the reindex command fails or the file is not found, note the failure in chat and
+   proceed — the plan document is still valid without the index update.

@@ -198,8 +198,9 @@ The primary input is the **session context** — the accumulated discussion in t
 conversation. The feature description parameterizes what to focus on if the session
 covered multiple topics.
 
-If the session context is thin (early in discussion), ask clarifying questions before
-writing. A proposal from an incomplete discussion is worse than no proposal.
+If the session contains fewer than 3 concrete design decisions or lacks a clear problem
+statement, ask clarifying questions before writing. A proposal from an incomplete
+discussion is worse than no proposal.
 
 ## Register the feature (docmgr)
 
@@ -231,3 +232,6 @@ A proposal lives inside a feature directory. When you write it:
    ```
    node ~/.bob/tools/docmgr.mjs reindex
    ```
+
+   If the reindex command fails or the tool is not found, note the failure in your response
+   and instruct the user to run it manually before proceeding.
