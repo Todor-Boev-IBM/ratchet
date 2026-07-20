@@ -32,68 +32,73 @@ directly in the plan document so work can be resumed across sessions.
 
 ### Step 2: Determine Starting Point
 
-Scan the `### Phase` headings under `## Phases` for their status marker:
+Scan the `### Phase` headings under `## Phases` for their status token:
 
-- `✅` — phase completed, skip it
-- `⏳` — phase started but not finished (e.g. an interrupted run), resume here
-- no marker — not started
+- `[done]` (conventionally written `[done] ✅`) — phase completed, skip it
+- `[wip]` (conventionally written `[wip] ⏳`) — phase started but not finished (e.g. an interrupted run), resume here
+- no token — not started
 
-If every phase has `✅`, inform the user the plan is complete and exit.
-If a phase has `⏳`, resume from it — re-verify its partial work before continuing, since it
+The text tokens (`[done]`, `[wip]`) are what the tooling looks for; the emoji are decorative
+and purely for human readability. Write whichever representation you prefer, but always include
+the text token so `docmgr` can parse it.
+
+If every phase has `[done]`, inform the user the plan is complete and exit.
+If a phase has `[wip]`, resume from it — re-verify its partial work before continuing, since it
 may have been interrupted mid-flight.
 Otherwise, start from the first unmarked phase.
 
 ### Step 3: Execute Each Phase
 
-Before the first phase this session, set the feature's intent to `active`
+Before the first phase this session, set the feature's status to `active`
 (see Feature lifecycle below).
 
 For each phase, in order:
 
 1. **Announce** — Tell the user which phase you're starting and its goals
-2. **Mark in-progress** — Append `⏳` to the phase heading in `plan.md`:
+2. **Mark in-progress** — Append `[wip] ⏳` to the phase heading in `plan.md`:
    ```
-   ### Phase 2: Core Logic ⏳
+   ### Phase 2: Core Logic [wip] ⏳
    ```
-   This is the crash-protection marker: if the run is interrupted, the `⏳` records exactly
-   which phase was mid-flight so the next invocation resumes there.
+   This is the crash-protection marker: if the run is interrupted, the `[wip]` token records
+   exactly which phase was mid-flight so the next invocation resumes there. The `⏳` is
+   decorative — you may omit it, but it helps at a glance.
 3. **Implement** — Do the actual work:
    - Read relevant source files to understand current state
    - Make code changes following the plan's guidance
    - Run tests, linters, or builds as appropriate
    - Fix issues that arise during implementation
 4. **Validate** — Check the phase's completion criteria from the plan
-5. **Mark completed** — Replace `⏳` with `✅` and the date, then reindex:
+5. **Mark completed** — Replace `[wip] ⏳` with `[done] ✅` and the date, then reindex:
    ```
-   ### Phase 2: Core Logic ✅ 2026-07-19
+   ### Phase 2: Core Logic [done] ✅ 2026-07-19
    ```
 6. **Summarize** — Brief summary of what was done in this phase
 
 ### Step 4: After All Phases
 
-When all phases are marked `✅`:
+When all phases are marked `[done]`:
 
 1. Run final validation (tests, build, lint)
-2. Refresh the index (see Feature lifecycle below). Do **not** set the feature's intent to
+2. Refresh the index (see Feature lifecycle below). Do **not** set the feature's status to
    `done` — a fully completed plan makes the feature _finishable_, but the human confirms
-   `done` during Triage. Leave `intent: active`.
+   `done` during Triage. Leave `status: active`.
 3. Summarize total work done
 
 ## Progress Marker Format
 
 The `## Phases` section is a strict contract with the `create-plan` skill: each phase is a
-`### Phase` sub-heading carrying a status marker.
+`### Phase` sub-heading carrying a status token.
 
 ```markdown
 ## Phases
 
-### Phase 1: Foundation ✅ 2026-07-19
+### Phase 1: Foundation [done] ✅ 2026-07-19
 
 Goals:
 
 - ...
 
-### Phase 2: Core Logic ⏳
+### Phase 2: Core Logic [wip] ⏳
 
 Goals:
 
@@ -102,17 +107,19 @@ Goals:
 ### Phase 3: Polish
 ```
 
-Markers: `✅` (with date) = done, `⏳` = in progress (the crash-recovery point), no marker =
-not started. The goal/deliverable prose lives under each heading and is left untouched. `docmgr`
-counts `✅` phases against the total number of `### Phase` headings as the feature's completion.
+Tokens: `[done]` (with optional `✅` and date) = done, `[wip]` (with optional `⏳`) = in
+progress (the crash-recovery point), no token = not started. The emoji are decorative — `docmgr`
+only reads the text tokens. The goal/deliverable prose lives under each heading and is left
+untouched. `docmgr` counts `[done]` phases against the total number of `### Phase` headings as
+the feature's completion.
 
 ## Execution Rules
 
 **Mark progress, don't skip it.** The primary purpose of this command is ensuring progress
-is tracked in the plan document. Never skip marking a phase (`⏳` on start, `✅` on finish)
-before moving to the next.
+is tracked in the plan document. Never skip marking a phase (`[wip]` on start, `[done]` on
+finish) before moving to the next.
 
-**Validate before marking `✅`.** A phase is complete when its deliverable/validation
+**Validate before marking `[done]`.** A phase is complete when its deliverable/validation
 criteria from the plan are met, not just when you've written code.
 
 ## Resumption
@@ -128,15 +135,16 @@ This makes it safe to interrupt and resume long plans across multiple sessions.
 ## Feature lifecycle (docmgr)
 
 A plan lives in a feature directory `docs/features/<slug>/`. The feature's only stored state
-is the `intent` field on `feature.md`; plan progress is the `## Phases` section's per-phase
-`✅`/`⏳` markers, which the index derives — it is never copied into frontmatter.
+is the `status` field on `feature.md`; plan progress is the `## Phases` section's per-phase
+`[done]`/`[wip]` text tokens (optionally followed by `✅`/`⏳` for readability), which the
+index derives — it is never copied into frontmatter.
 
-- Intents: `parked → active → done` (or `abandoned`). Only `parked` and `active` are open.
-- On starting execution, set `feature.md`'s `intent: active` (promoting from `parked` if
+- Statuses: `draft → active → done` (or `abandoned`). Only `draft` and `active` are open.
+- On starting execution, set `feature.md`'s `status: active` (promoting from `draft` if
   needed). This is the only frontmatter write this skill makes.
-- Do **not** set `intent: done` or `abandoned`. Completing the phases marks the feature
+- Do **not** set `status: done` or `abandoned`. Completing the phases marks the feature
   _finishable_; the human confirms `done` (or `abandoned`) during Triage.
-- After marking a phase `✅` or changing intent, refresh the index (run from the repo root):
+- After marking a phase `✅` or changing status, refresh the index (run from the repo root):
 
   ```
   node ~/.bob/tools/docmgr.mjs reindex

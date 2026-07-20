@@ -272,14 +272,14 @@ A plan lives inside a feature directory. When you write it:
      ```
      ---
      title: "<Feature Title>"
-     intent: active
+     status: active
      ---
      One-line statement of what this feature is.
      ```
 
-   Set `intent: active` — writing a plan commits the feature to implementation. If the
-   feature already exists with `intent: parked`, promote it to `active`. (Triage sets
-   `done`/`abandoned` later; never write those yourself.)
+  Set `status: active` — writing a plan commits the feature to implementation. If the
+  feature already exists with `status: draft`, promote it to `active`. (Triage sets
+  `done`/`abandoned` later; never write those yourself.)
 
 2. Write the plan as `docs/features/<slug>/plan.md`. It is pure content; give it at most a
    `title` in frontmatter and no status of its own. Its `## Phases` section (the per-phase

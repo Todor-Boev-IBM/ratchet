@@ -208,20 +208,20 @@ A proposal lives inside a feature directory. When you write it:
 
 1. Create the feature directory `docs/features/<slug>/` and write two files.
 
-   `feature.md` — the anchor. Its frontmatter carries the feature's only stored state,
-   its `intent`:
+`feature.md` — the anchor. Its frontmatter carries the feature's only stored state,
+its `status`:
 
-   ```
-   ---
-   title: "<Feature Title>"
-   intent: parked
-   ---
-   One-line statement of what this feature is.
-   ```
+```
+---
+title: "<Feature Title>"
+status: draft
+---
+One-line statement of what this feature is.
+```
 
-   Use `intent: parked` here — a proposal captures a design without committing to build
-   it yet. `create-plan` promotes the feature to `active` when the work is committed, and
-   Triage sets `done`/`abandoned` later. Never write `done`/`abandoned` yourself.
+Use `status: draft` here — a proposal captures a design without committing to build
+it yet. `create-plan` promotes the feature to `active` when the work is committed, and
+Triage sets `done`/`abandoned` later. Never write `done`/`abandoned` yourself.
 
    `proposal.md` — the design document itself (the structure above). It is pure content;
    give it at most a `title` in frontmatter and no status of its own. The feature's state
