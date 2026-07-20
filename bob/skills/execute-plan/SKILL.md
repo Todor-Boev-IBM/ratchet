@@ -25,63 +25,69 @@ directly in the plan document so work can be resumed across sessions.
 ### Step 1: Read and Understand the Plan
 
 1. Read the plan document completely
-2. Identify all phases — headings matching `### Phase <number>: Name` (numbers may include
-   subphase suffixes like `2a`, `3.1`, etc.)
-3. Check for status suffixes to determine where to resume
+2. Identify all phases — the `### Phase <number>: Name` sub-headings under the `## Phases`
+   section (names may carry subphase suffixes like `2a`, `3.1`)
+3. Read each phase heading's status marker to determine where to resume
 4. Read architecture docs, project rules, and other references mentioned in the plan
 
 ### Step 2: Determine Starting Point
 
-Scan `### Phase` headings for status suffixes:
+Scan the `### Phase` headings under `## Phases` for their status marker:
 
 - `✅` — phase completed, skip it
-- `⏳` — phase in progress, resume here
-- No suffix — not started
+- `⏳` — phase started but not finished (e.g. an interrupted run), resume here
+- no marker — not started
 
-If all phases have `✅`, inform the user and exit.
-If a phase has `⏳`, resume from that phase.
+If every phase has `✅`, inform the user the plan is complete and exit.
+If a phase has `⏳`, resume from it — re-verify its partial work before continuing, since it
+may have been interrupted mid-flight.
 Otherwise, start from the first unmarked phase.
 
 ### Step 3: Execute Each Phase
 
-Before the first phase this session, set the plan's frontmatter to `status: active`
-(see Document lifecycle below).
+Before the first phase this session, set the feature's intent to `active`
+(see Feature lifecycle below).
 
 For each phase, in order:
 
 1. **Announce** — Tell the user which phase you're starting and its goals
-2. **Mark in-progress** — Append `⏳` to the phase heading:
+2. **Mark in-progress** — Append `⏳` to the phase heading in `plan.md`:
    ```
    ### Phase 2: Core Logic ⏳
    ```
+   This is the crash-protection marker: if the run is interrupted, the `⏳` records exactly
+   which phase was mid-flight so the next invocation resumes there.
 3. **Implement** — Do the actual work:
    - Read relevant source files to understand current state
    - Make code changes following the plan's guidance
    - Run tests, linters, or builds as appropriate
    - Fix issues that arise during implementation
 4. **Validate** — Check the phase's completion criteria from the plan
-5. **Mark completed** — Replace `⏳` with `✅` and the date:
+5. **Mark completed** — Replace `⏳` with `✅` and the date, then reindex:
    ```
-   ### Phase 2: Core Logic ✅ 2026-03-07
+   ### Phase 2: Core Logic ✅ 2026-07-19
    ```
 6. **Summarize** — Brief summary of what was done in this phase
 
 ### Step 4: After All Phases
 
-When all phases are completed:
+When all phases are marked `✅`:
 
 1. Run final validation (tests, build, lint)
-2. Update the document lifecycle (see below): set the plan's frontmatter `status: done`;
-   if the plan is paired with a proposal, set that proposal's frontmatter `status: implemented`;
-   then refresh the index.
+2. Refresh the index (see Feature lifecycle below). Do **not** set the feature's intent to
+   `done` — a fully completed plan makes the feature _finishable_, but the human confirms
+   `done` during Triage. Leave `intent: active`.
 3. Summarize total work done
 
 ## Progress Marker Format
 
-Phase headings follow a strict contract with the `/create-plan` command:
+The `## Phases` section is a strict contract with the `create-plan` skill: each phase is a
+`### Phase` sub-heading carrying a status marker.
 
 ```markdown
-### Phase 1: Foundation ✅ 2026-03-07
+## Phases
+
+### Phase 1: Foundation ✅ 2026-07-19
 
 Goals:
 
@@ -96,16 +102,17 @@ Goals:
 ### Phase 3: Polish
 ```
 
-(no suffix = not started)
-
-The `✅`/`⏳` suffixes are visible in rendered markdown so progress is scannable at a glance.
+Markers: `✅` (with date) = done, `⏳` = in progress (the crash-recovery point), no marker =
+not started. The goal/deliverable prose lives under each heading and is left untouched. `docmgr`
+counts `✅` phases against the total number of `### Phase` headings as the feature's completion.
 
 ## Execution Rules
 
 **Mark progress, don't skip it.** The primary purpose of this command is ensuring progress
-is tracked in the plan document. Never skip marking a phase before moving to the next.
+is tracked in the plan document. Never skip marking a phase (`⏳` on start, `✅` on finish)
+before moving to the next.
 
-**Validate before marking complete.** A phase is complete when its deliverable/validation
+**Validate before marking `✅`.** A phase is complete when its deliverable/validation
 criteria from the plan are met, not just when you've written code.
 
 ## Resumption
@@ -118,16 +125,18 @@ This command is designed to be invoked multiple times on the same plan:
 
 This makes it safe to interrupt and resume long plans across multiple sessions.
 
-## Document lifecycle (docmgr)
+## Feature lifecycle (docmgr)
 
-Plans and proposals are tracked documents. Status lives in frontmatter; the index is generated.
+A plan lives in a feature directory `docs/features/<slug>/`. The feature's only stored state
+is the `intent` field on `feature.md`; plan progress is the `## Phases` section's per-phase
+`✅`/`⏳` markers, which the index derives — it is never copied into frontmatter.
 
-- Plan status: `draft → active → done` (or `abandoned`).
-- On starting execution, set the plan to `active`. On completion, set it to `done`.
-- If the plan is paired with a proposal (its `proposal:` link, or a same-named proposal), a
-  completed plan means that proposal is realized — set the proposal's frontmatter
-  `status: implemented`.
-- After any status change, refresh the index (run from the repo root):
+- Intents: `parked → active → done` (or `abandoned`). Only `parked` and `active` are open.
+- On starting execution, set `feature.md`'s `intent: active` (promoting from `parked` if
+  needed). This is the only frontmatter write this skill makes.
+- Do **not** set `intent: done` or `abandoned`. Completing the phases marks the feature
+  _finishable_; the human confirms `done` (or `abandoned`) during Triage.
+- After marking a phase `✅` or changing intent, refresh the index (run from the repo root):
 
   ```
   node ~/.bob/tools/docmgr.mjs reindex

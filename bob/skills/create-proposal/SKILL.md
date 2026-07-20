@@ -10,7 +10,8 @@ metadata:
 
 Capture the design discussion from this session into a proposal document for $1.
 
-Store the proposal as a markdown file under docs/proposals.
+Store the proposal as `docs/features/<slug>/proposal.md`, alongside a `feature.md` anchor
+(see "Register the feature" below).
 
 # Design Proposal Generator
 
@@ -62,6 +63,7 @@ Read the full session. Extract:
 - Key decisions and their rationale
 - Scope boundaries (what's in, what's out)
 - Unresolved questions (if any remain)
+- Assumptions the discussion relied on without stating them explicitly
 
 ### Step 2: Validate Against the Codebase
 
@@ -145,6 +147,16 @@ Unresolved items from the discussion. Each question should state what's blocked 
 (nothing, planning, or implementation). If the discussion resolved everything, omit
 this section.
 
+### Assumptions
+
+Defaults or premises the discussion leaned on without the user ever stating them. Unlike
+Open Questions, these don't block anything — which is why they escape notice and quietly
+shape the design. Each line names the assumption and invites correction. List only genuine
+free choices a reasonable person could have made differently; omit the section if there were
+none.
+
+- Assumed [X] because the discussion never specified it — flag if wrong.
+
 ## Output Format
 
 The proposal should be:
@@ -177,8 +189,8 @@ The proposal should be:
 - Include pseudo-code where real type definitions suffice
 - Write aspirational "future work" sections — either it's in scope or it's not
 
-**Naming:** Use lowercase-kebab-case for the filename: `{short-name}.md`.
-Match the pattern of existing proposals in the output directory.
+**Naming:** Use lowercase-kebab-case for the feature slug: `docs/features/{short-name}/`.
+The proposal file is always named `proposal.md`. Match the slug style of existing features.
 
 ## Input
 
@@ -189,21 +201,30 @@ covered multiple topics.
 If the session context is thin (early in discussion), ask clarifying questions before
 writing. A proposal from an incomplete discussion is worse than no proposal.
 
-## Register the proposal (docmgr)
+## Register the feature (docmgr)
 
-The proposal is a tracked document. When you write the file:
+A proposal lives inside a feature directory. When you write it:
 
-1. Put frontmatter at the very top:
+1. Create the feature directory `docs/features/<slug>/` and write two files.
+
+   `feature.md` — the anchor. Its frontmatter carries the feature's only stored state,
+   its `intent`:
 
    ```
    ---
-   status: open
+   title: "<Feature Title>"
+   intent: parked
    ---
+   One-line statement of what this feature is.
    ```
 
-   `open` = a proposal with no plan yet. Lifecycle: `open → accepted → implemented`
-   (or `abandoned`). Do not add prose links to a plan — the pairing is set later by
-   `create-plan` in frontmatter.
+   Use `intent: parked` here — a proposal captures a design without committing to build
+   it yet. `create-plan` promotes the feature to `active` when the work is committed, and
+   Triage sets `done`/`abandoned` later. Never write `done`/`abandoned` yourself.
+
+   `proposal.md` — the design document itself (the structure above). It is pure content;
+   give it at most a `title` in frontmatter and no status of its own. The feature's state
+   lives only on `feature.md`.
 
 2. Refresh the index (run from the repo root):
 
