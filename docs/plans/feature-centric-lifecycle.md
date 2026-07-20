@@ -13,7 +13,7 @@ title: "Feature-Centric Document Lifecycle"
 Replace the parallel `docs/proposals/` + `docs/plans/` layout (paired by filename, each doc
 carrying its own status) with a per-feature directory `docs/features/<slug>/` holding a small
 `feature.md` anchor plus optional `proposal.md` / `plan.md`. A feature's only stored state is a
-single `intent` field on `feature.md`; everything else (which artifacts exist, plan completion,
+single `status` field on `feature.md`; everything else (which artifacts exist, plan completion,
 last-touched) is *derived* by `docmgr` and never written back. `docmgr` becomes read-only with
 respect to content, gains a `triage` surface, and a new Triage skill becomes the single place
 the closing `done`/`abandoned` decisions are made. This solves the real problem — a feature
@@ -47,7 +47,7 @@ what stage.
 ### On-disk format (the real contract)
 
 - `docs/features/<slug>/feature.md` — required per feature. Flat frontmatter:
-  `title: "<string>"`, `intent: <parked|active|done|abandoned>`. Body: one-line purpose.
+  `title: "<string>"`, `status: <draft|active|done|abandoned>`. Body: one-line purpose.
 - `docs/features/<slug>/proposal.md`, `plan.md` — optional, pure content, at most a `title`.
   No status of their own.
 - `plan.md` progress marker: a `## Phases` section whose `### Phase ...` sub-headings each
@@ -58,17 +58,17 @@ what stage.
 
 ### New model (`lib/features.mjs`, replacing `lib/model.mjs`)
 
-- `INTENTS = ['parked', 'active', 'done', 'abandoned']` — the closed vocabulary.
+- `INTENTS = ['draft', 'active', 'done', 'abandoned']` — the closed vocabulary.
 - `loadFeatures(docsDir) -> Feature[]` — walk `<docsDir>/features/*/` (i.e. `docs/features/`),
   parse each `feature.md`, detect artifacts, attach derived facts. Pure read.
-- `Feature` shape: `{ slug, title, intent, purpose, hasProposal, hasPlan, planCompletion,
+- `Feature` shape: `{ slug, title, status, purpose, hasProposal, hasPlan, planCompletion,
   lastTouched }` where `planCompletion` is `{ checked, total } | null` and `lastTouched` is an
   epoch ms.
 - `derivePlanCompletion(planBody) -> { checked, total } | null` — count the `### Phase`
   headings' `✅` markers within the `## Phases` section.
 - `deriveLastTouched(featureDir) -> number` — most recent mtime among the folder's files.
 - `validateFeatures(features) -> string[]` — structural problems only (see §4). Pure, no I/O.
-- `triageView(features) -> Bucket[]` — open-intent features (`parked`/`active`) only, ordered
+- `triageView(features) -> Bucket[]` — open-status features (`draft`/`active`) only, ordered
   oldest-touched first, grouped into one-week age bands.
 
 ### CLI (`docmgr.mjs`)
@@ -76,7 +76,7 @@ what stage.
 - `docmgr reindex [--docs <dir>] [--out <file>]` — render `index.md` from features; **never**
   writes a feature file. Prints an ambient nudge line: `N finishable, M stale`.
 - `docmgr check [--docs <dir>]` — structural audit only; exit non-zero on problems.
-- `docmgr triage [--docs <dir>]` — **new.** Print the triage view (open intents, oldest-first,
+- `docmgr triage [--docs <dir>]` — **new.** Print the triage view (open statuses, oldest-first,
   weekly bands, with derived facts) for the Triage skill to consume. Read-only.
 
 `docs/features/` may be empty initially; new work populates it. Migrating the existing
@@ -114,7 +114,7 @@ lastTouched(dir) = max(mtimeMs of every file directly in dir, recursively)
 **Component: triage view (`lib/features.mjs`)**
 
 ```text
-open = features where intent in {parked, active}
+open = features where status in {draft, active}
 sort open by lastTouched ascending          # oldest first
 band by 7-day age from now: [0-7), [7-14), ...   # bands, not a cutoff
 within each band keep the oldest-first order
@@ -126,8 +126,8 @@ Design decisions:
 - **The tool never writes feature content — only `index.md`.** `reindex` dropping
   `maintainFrontmatter` is the whole point: no second writer, so no silent corruption of
   authored state. `check` reports; a skill (with the human present) fixes.
-- **Intent is the only stored state; structure is always derived.** `parked`/`active` are the
-  only intents Triage ever shows; `done`/`abandoned` remove a feature from the working list.
+- **Status is the only stored state; structure is always derived.** `draft`/`active` are the
+  only statuses Triage ever shows; `done`/`abandoned` remove a feature from the working list.
 - **Completion raises a question, never sets `done`.** A `## Phases` section with every phase
   marked `✅` marks a feature *finishable*; the human decides `done` in Triage.
 - **`last-touched` uses filesystem mtime by choice, with a known weakness.** mtime is reset by
@@ -141,7 +141,7 @@ Rules (report-only):
 
 ```text
 - every docs/features/<slug>/ has a feature.md
-- feature.md has a title and an intent in INTENTS
+- feature.md has a title and a status in INTENTS
 - at least one of proposal.md / plan.md exists
 - (warn) plan.md present but no "## Phases" section with phase headings  -> no completion signal
 ```
@@ -152,21 +152,21 @@ Rules (report-only):
   headings, mixed done/in-progress/not-started, phase headings outside `## Phases` ignored,
   non-phase sub-headings ignored); `deriveLastTouched`; `triageView` ordering + banding +
   open-intent filtering; `validateFeatures` each rule.
-- **Unit (render):** `index.md` grouped by intent with derived facts; ambient nudge counts.
+- **Unit (render):** `index.md` grouped by status with derived facts; ambient nudge counts.
 - **Integration:** run `reindex`/`check`/`triage` against a fixture `docs/features/` tree and
   assert output; assert `reindex` writes no file other than `index.md`.
 - Critical scenarios (names): read-only-reindex, finishable-detection, stale-banding,
-  open-intent-only-triage, completion-ignores-out-of-section-phases.
+  open-status-only-triage, completion-ignores-out-of-section-phases.
 
 ## 6. Implementation Phases
 
 ### Phase 1: Feature model and read-only reindex ✅ 2026-07-19
 
 - Add `lib/features.mjs` (load features, derive completion + last-touched); rewrite `render.mjs`
-  to group by intent and show derived facts; delete pairing/frontmatter-write code paths.
+  to group by status and show derived facts; delete pairing/frontmatter-write code paths.
 - Rewire `docmgr reindex` to the feature model; it writes only `index.md`.
 - Deliverable: against a fixture `docs/features/` tree, `reindex` produces a correct
-  intent-grouped `index.md` and touches no feature file.
+  status-grouped `index.md` and touches no feature file.
 
 ### Phase 2: check and triage surfaces ✅ 2026-07-19
 
@@ -178,10 +178,10 @@ Rules (report-only):
 ### Phase 3: Capture and execute-plan skills (`bob/skills/`) ✅ 2026-07-19
 
 - Update `create-proposal` / `create-plan` to create a `docs/features/<slug>/` folder, write
-  `feature.md` (intent `parked` when just capturing, `active` when committing), and emit
+  `feature.md` (status `draft` when just capturing, `active` when committing), and emit
   `proposal.md` / `plan.md`; keep `create-plan`'s readable `### Phase N` headings under a
   `## Phases` container, emitted with no status marker.
-- Update `execute-plan` to set intent `active` and mark `### Phase` headings `⏳` on start /
+- Update `execute-plan` to set status `active` and mark `### Phase` headings `⏳` on start /
   `✅` on finish as phases progress (retaining the crash-recovery marker).
 - Scope: `bob/skills/` sources only; `.github/prompts/` mirrors are deferred.
 - Deliverable: capturing and executing produce correct folders, intents, and phase markers.
@@ -189,7 +189,7 @@ Rules (report-only):
 ### Phase 4: Triage skill; confirm commit skills untouched ✅ 2026-07-19
 
 - Add a `triage` skill that runs `docmgr triage`, walks the open features (oldest-first bands),
-  prompts keep / `done` / `abandoned` per feature, and writes the chosen `intent` to
+  prompts keep / `done` / `abandoned` per feature, and writes the chosen `status` to
   `feature.md`.
 - Verify `prepare-next-commit` / `prepare-single-commit` carry no triage logic.
 - Deliverable: a Triage session reconciles intents end-to-end; commit skills are unchanged.

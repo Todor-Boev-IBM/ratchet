@@ -38,8 +38,8 @@ and it comes with tradeoffs I accept consciously:
   project. The system has to handle the accumulating case without assuming it's universal.
 - **Comprehension is debt.** Backgrounding execution means I don't hold the resulting code in
   my head. The recover-quality phase pays that debt while understanding is still fresh — which
-  is why it's the one thing I *won't* defer, though I'll happily leave a proposal or plan
-  parked. What I defer versus what I don't is itself an attention decision.
+  is why it's the one thing I *won't* defer, though I'll happily leave a proposal or plan in
+  `draft`. What I defer versus what I don't is itself an attention decision.
 - **Abandonment is a signal, not a failure.** Since ideation is *meant* to outrun execution,
   some captured work is expected to be dropped. A visible, counted `abandoned` state is the
   honest scoreboard for my ideation-to-execution ratio — not a mess to hide.
@@ -71,7 +71,7 @@ am present.
   used to produce it, not the thing itself.
 - **Separate what can be observed from what only I know.** Structural facts (which artifacts
   exist, whether a plan's phases are checked, when the folder was last touched) are *derived*
-  by the tool and never stored. Only my *intent* toward a feature is stored, because only I
+  by the tool and never stored. Only my *status* toward a feature is stored, because only I
   know it.
 - **Identity is the folder.** A feature is a directory; that is what everything else hangs on.
 - **The tool observes, derives, and reports; it never silently rewrites** authored content.
@@ -83,7 +83,7 @@ am present.
 A feature is a directory: `docs/features/<slug>/`, containing:
 
 - **`feature.md`** — the anchor, always present. Holds the feature's title and my single
-  **intent** value (below). This is the unit the index lists.
+  **status** value (below). This is the unit the index lists.
 - **`proposal.md`** — optional. The design record, when the feature warranted one.
 - **`plan.md`** — optional. The implementation plan, when one was produced. Its phases are
   `### Phase N` sub-headings under a `## Phases` section, each carrying a status marker (`✅`
@@ -92,20 +92,20 @@ A feature is a directory: `docs/features/<slug>/`, containing:
   there is no separate progress field to maintain.
 
 `feature.md` is always present; at least one of `proposal.md` / `plan.md` is expected. It stays
-minimal on purpose — title, intent, and a one-line statement of *what the feature is* (stable
+minimal on purpose — title, status, and a one-line statement of *what the feature is* (stable
 purpose, not a design summary, so it doesn't drift against `proposal.md`). `proposal.md` and
 `plan.md` are **pure content** — at most a title, no status of their own. The folder *is* the
 feature: everything about it lives in one place.
 
-### Intent vs. derived state
+### Status vs. derived state
 
 Two different kinds of state, kept apart:
 
-**Intent** — the only thing stored, in `feature.md`:
+**Status** — the only thing stored, in `feature.md`:
 
-| intent      | meaning                                                       |
+| status      | meaning                                                       |
 | ----------- | ------------------------------------------------------------- |
-| `parked`    | captured out of curiosity; not committed to (idea / research) |
+| `draft`     | captured out of curiosity; not committed to (idea / research) |
 | `active`    | I intend to work on it, or am working on it                   |
 | `done`      | I'm satisfied and moving on                                   |
 | `abandoned` | dropped; I've moved on without finishing                      |
@@ -117,29 +117,29 @@ Two different kinds of state, kept apart:
   section; a plan with no such section simply has no completion signal
 - **last touched**: folder mtime, to surface the forgotten middle
 
-The stage I read is `intent × derived facts` — e.g. *"active, plan 4/6, last touched 31 days
-ago."* I never hand-track the structural transitions, and the values I do own (`parked` →
+The stage I read is `status × derived facts` — e.g. *"active, plan 4/6, last touched 31 days
+ago."* I never hand-track the structural transitions, and the values I do own (`draft` →
 `active` → `done`/`abandoned`) change rarely and only at moments I'm deciding something.
 
 ## Skills and How They Relate
 
 Skills are **decision-capture points**, not a linear pipeline — matching how the work actually
-flows. The tool reads and flags; skills write intent.
+flows. The tool reads and flags; skills write status.
 
 - **Capture** (today's `/create-proposal` and `/create-plan`, unified in behavior) — turn the
   current session's context into a feature folder. Emits `proposal.md`, `plan.md`, or both, and
-  sets intent to `parked` (just capturing) or `active` (committing now). This is the
+  sets status to `draft` (just capturing) or `active` (committing now). This is the
   crystallization moment out of a research session.
-- **`/execute-plan`** — largely as today. On start, ensures intent is `active`; as it works, it
+- **`/execute-plan`** — largely as today. On start, ensures status is `active`; as it works, it
   **checks off plan phases** so completion becomes an observable fact. That check-off is what
   later lets Triage spot finishable work.
 - **Triage** (new — the missing piece) — one concentrated skill, and the *only* place the
-  closing decisions (`done` / `abandoned`) are made. It shows only the open intents — `parked`
+  closing decisions (`done` / `abandoned`) are made. It shows only the open statuses — `draft`
   and `active`; once a feature is `done` or `abandoned` it drops out of the list. Within that
   set it surfaces what's actionable: work that hasn't moved in a long time, or a complete plan
   awaiting a call. It orders the list oldest-touched first, bucketed at one-week intervals, so
   staleness reads as age bands rather than a single stale/fresh cutoff. For each it prompts me
-  to decide and writes the intent I choose. This is the deliberate "clear the backlog" session.
+  to decide and writes the status I choose. This is the deliberate "clear the backlog" session.
   It gets its own skill precisely because reasoning across the whole portfolio at once is heavy
   — not something to graft onto another skill.
 
@@ -148,7 +148,7 @@ changes into logical commits; portfolio state is a separate concern that would o
 both. A commit is not bound to a feature anyway (my commits summarize code, and may span
 several features or none).
 
-So intent is reconciled in exactly one place, and nothing in between depends on me updating
+So status is reconciled in exactly one place, and nothing in between depends on me updating
 status mid-flight. What keeps Triage from depending on memory is the tool itself: because it
 derives completion and staleness, any run — e.g. on `reindex`, which I do anyway — can surface
 how many features are finishable or have gone stale. That ambient count is the nudge that tells
@@ -160,12 +160,12 @@ the feature system does not try to own the research corpus.
 
 ## Behavioral Implications
 
-- **No mid-flight bookkeeping.** One intent field, written only at checkpoints. Structural
+- **No mid-flight bookkeeping.** One status field, written only at checkpoints. Structural
   state is derived, so there's nothing to keep in sync.
 - **The forgotten middle becomes visible.** Sorting by last-touched and surfacing stale
-  `parked` / `active` features is exactly the question I can't answer today.
+  `draft` / `active` features is exactly the question I can't answer today.
 - **The tool stays read-only for content.** `reindex` writes only the index. `check` reports
-  structural problems (missing `feature.md`, no artifact, unknown intent value) but never
+  structural problems (missing `feature.md`, no artifact, unknown status value) but never
   rewrites — correcting a flagged problem is a skill's job, in the loop.
 
 ## What Does Not Change
