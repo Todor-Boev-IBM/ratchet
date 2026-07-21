@@ -9,7 +9,7 @@
 //
 // This module reads but never writes. It reuses lib/markdown.mjs for the
 // frontmatter parse and knows nothing about the CLI or index rendering
-// (lib/render.mjs turns features into docs/index.md; docmgr.mjs prints).
+// (lib/render.mjs turns features into docs/index.md; featuremgr.mjs prints).
 //
 // Replaces the old proposal/plan model (pairing, per-doc status, frontmatter
 // repair) entirely — none of that survives here.

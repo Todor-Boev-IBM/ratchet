@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// docmgr — a read-only index builder and triage surface for a docs/ tree of
+// featuremgr — a read-only index builder and triage surface for a docs/ tree of
 // features. A feature is a directory docs/features/<slug>/ holding a required
 // feature.md anchor plus optional proposal.md / plan.md.
 //   • reindex  — regenerates docs/index.md from the features. Never writes a
@@ -31,14 +31,14 @@
 //                       completion + last-touched, validation, triage view.
 //                       Reads but never writes.
 //   lib/render.mjs    — turns a loaded feature set into docs/index.md markdown.
-//   docmgr.mjs (here) — CLI only: argv parsing, command dispatch, and the thin
+//   featuremgr.mjs (here) — CLI only: argv parsing, command dispatch, and the thin
 //                       reindex/check/triage commands that wire the model +
 //                       render + I/O together and print the results.
 //
 // Usage
-//   docmgr reindex [--docs <dir>] [--out <file>]
-//   docmgr check   [--docs <dir>]
-//   docmgr triage  [--docs <dir>]
+//   featuremgr reindex [--docs <dir>] [--out <file>]
+//   featuremgr check   [--docs <dir>]
+//   featuremgr triage  [--docs <dir>]
 
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -120,6 +120,6 @@ switch (cmd) {
     process.exit(triage(opts.docs))
     break
   default:
-    console.error('usage: docmgr <reindex|check|triage> [--docs <dir>] [--out <file>]')
+    console.error('usage: featuremgr <reindex|check|triage> [--docs <dir>] [--out <file>]')
     process.exit(2)
 }

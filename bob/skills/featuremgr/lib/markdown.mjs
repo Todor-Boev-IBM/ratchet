@@ -4,10 +4,10 @@
 // frontmatter. Nothing in this file knows about "proposals" or "plans" —
 // it would work for any folder of *.md files. Think of it as the seam
 // between "code that could be an npm package" and "code that is specific
-// to how docmgr organizes docs" (which stays in docmgr.mjs).
+// to how featuremgr organizes docs" (which stays in featuremgr.mjs).
 //
 // Why hand-rolled instead of real packages (e.g. `gray-matter` for
-// frontmatter, `fast-glob` for file discovery)? docmgr is a small,
+// frontmatter, `fast-glob` for file discovery)? featuremgr is a small,
 // dependency-free script. The two functions below only need to handle the
 // narrow slice of YAML this repo actually uses — flat `key: value` lines,
 // no lists or nesting — so a full YAML parser wasn't worth adding
@@ -52,7 +52,7 @@ export function walkMarkdownFiles(dir) {
  *
  * This only understands flat `key: value` lines — it is NOT a general YAML
  * parser, just enough to read (and later rewrite) the couple of fields
- * docmgr cares about.
+ * featuremgr cares about.
  *
  * Returns `{ data, body }`:
  *   - `data` — a plain object of the parsed frontmatter fields

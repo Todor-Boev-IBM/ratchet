@@ -8,14 +8,14 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const docmgr = join(here, '..', 'docmgr.mjs')
+const featuremgr = join(here, '..', 'featuremgr.mjs')
 
 function run(args, opts = {}) {
-  return execFileSync('node', [docmgr, ...args], { encoding: 'utf8', ...opts })
+  return execFileSync('node', [featuremgr, ...args], { encoding: 'utf8', ...opts })
 }
 
 function buildFixture() {
-  const docs = mkdtempSync(join(tmpdir(), 'docmgr-cli-'))
+  const docs = mkdtempSync(join(tmpdir(), 'featuremgr-cli-'))
   const write = (slug, files) => {
     const dir = join(docs, 'features', slug)
     mkdirSync(dir, { recursive: true })

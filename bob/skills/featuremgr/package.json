@@ -1,11 +1,11 @@
 {
-    "name": "docmgr",
+    "name": "featuremgr",
     "version": "0.0.0",
     "private": true,
     "type": "module",
     "description": "Read-only index builder and triage surface for a docs/features tree",
     "bin": {
-        "docmgr": "./docmgr.mjs"
+        "featuremgr": "./featuremgr.mjs"
     },
     "scripts": {
         "test": "node --test"

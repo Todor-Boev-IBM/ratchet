@@ -19,7 +19,7 @@ const DAY_MS = 24 * 60 * 60 * 1000
 // --- fixture helpers ---------------------------------------------------------
 
 function tmpDocs() {
-  return mkdtempSync(join(tmpdir(), 'docmgr-'))
+  return mkdtempSync(join(tmpdir(), 'featuremgr-'))
 }
 
 function writeFeature(docsDir, slug, { feature, proposal, plan } = {}) {
