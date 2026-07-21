@@ -43,6 +43,7 @@ function feat(overrides = {}) {
     hasProposal: false,
     hasPlan: false,
     planCompletion: null,
+    archMerged: null,
     lastTouched: Date.now(),
     ...overrides,
   }
@@ -109,6 +110,28 @@ test('loadFeatures: parses status, title, artifacts, completion', () => {
   assert.equal(f.hasProposal, true)
   assert.equal(f.hasPlan, true)
   assert.deepEqual(f.planCompletion, { checked: 1, total: 2 })
+  rmSync(docs, { recursive: true, force: true })
+})
+
+test('loadFeatures: archMerged is null when arch-merged is absent', () => {
+  const docs = tmpDocs()
+  writeFeature(docs, 'noarch', {
+    feature: '---\ntitle: "No arch"\nstatus: active\n---\npurpose\n',
+    proposal: '# p\n',
+  })
+  const [f] = loadFeatures(docs)
+  assert.equal(f.archMerged, null)
+  rmSync(docs, { recursive: true, force: true })
+})
+
+test('loadFeatures: archMerged is the ISO date string when arch-merged is present', () => {
+  const docs = tmpDocs()
+  writeFeature(docs, 'witharch', {
+    feature: '---\ntitle: "With arch"\nstatus: done\narch-merged: 2026-07-22\n---\npurpose\n',
+    proposal: '# p\n',
+  })
+  const [f] = loadFeatures(docs)
+  assert.equal(f.archMerged, '2026-07-22')
   rmSync(docs, { recursive: true, force: true })
 })
 

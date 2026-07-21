@@ -99,3 +99,30 @@ test('triage: lists open features oldest-first', () => {
   assert.match(out, /beta \(draft\)/)
   rmSync(docs, { recursive: true, force: true })
 })
+
+test('triage: [arch-pending] shown for open features without arch-merged', () => {
+  const docs = buildFixture()
+  // buildFixture creates alpha (active, no arch-merged) and beta (draft, no arch-merged)
+  const out = run(['triage', '--docs', docs])
+  const lines = out.split('\n').filter(l => l.includes('alpha') || l.includes('beta'))
+  assert.ok(lines.every(l => l.includes('[arch-pending]')), `expected [arch-pending] in: ${lines.join(' | ')}`)
+  rmSync(docs, { recursive: true, force: true })
+})
+
+test('triage: [arch-pending] absent when arch-merged is set', () => {
+  const docs = mkdtempSync(join(tmpdir(), 'featuremgr-cli-arch-'))
+  const write = (slug, files) => {
+    const dir = join(docs, 'features', slug)
+    mkdirSync(dir, { recursive: true })
+    for (const [name, body] of Object.entries(files)) writeFileSync(join(dir, name), body)
+  }
+  write('merged', {
+    'feature.md': '---\ntitle: "Merged"\nstatus: active\narch-merged: 2026-07-22\n---\npurpose\n',
+    'proposal.md': '# p\n',
+  })
+  const out = run(['triage', '--docs', docs])
+  const line = out.split('\n').find(l => l.includes('merged'))
+  assert.ok(line, 'expected merged feature in output')
+  assert.doesNotMatch(line, /\[arch-pending\]/)
+  rmSync(docs, { recursive: true, force: true })
+})

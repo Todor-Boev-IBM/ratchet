@@ -100,7 +100,8 @@ function triage(docsDir) {
         ? `plan ${feature.planCompletion.checked}/${feature.planCompletion.total}`
         : 'no plan phases'
       const flag = actionable ? ' [actionable]' : ''
-      console.log(`  - ${feature.slug} (${feature.status}) — ${artifacts} — ${plan} — ${Math.floor(ageDays)}d${flag}`)
+      const archPending = feature.archMerged === null ? ' [arch-pending]' : ''
+      console.log(`  - ${feature.slug} (${feature.status}) — ${artifacts} — ${plan} — ${Math.floor(ageDays)}d${flag}${archPending}`)
     }
   }
   return 0

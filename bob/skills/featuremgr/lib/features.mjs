@@ -138,6 +138,7 @@ function loadFeature(dir, slug) {
     hasFeatureFile,
     title: data.title || null,
     status: data.status || null,
+    archMerged: data['arch-merged'] ?? null,
     purpose: firstLine(body),
     hasProposal,
     hasPlan,
