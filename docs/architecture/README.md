@@ -82,15 +82,20 @@ The `/execute-plan` steps through the plan's phases. This is the slow part, and 
 
 ### Reconcile
 
-Chat style, powerfule model.
+Chat style, powerful model.
 
 Completing execution leads straight into the recover-quality phase rather than deferring it: review by hand,
 challenge the agent to reduce code, run the `Simplify` mode, and use `/identify-low-value-tests` to prune weak
 tests.
 
 The goal is to fit the new code cleanly into the codebase — maintaining the principles the code embodies, and
-sometimes syncing what changed back into the `docs/architecture` set so the larger principles keep pace. This is the
+syncing what changed back into the `docs/architecture` set so the larger principles keep pace. This is the
 loop's investment in the next one: the quality maintained here is what the agent imitates next time.
+
+Use `/reconcile-arch <slug>` to transfer a completed feature's architectural decisions into `docs/architecture`.
+The skill reads the feature's proposal and plan, maps each decision against the existing architecture tree, and
+produces a gap analysis in chat before writing anything. When the updates are confirmed it stamps
+`arch-merged: <date>` on the feature record as a provenance timestamp.
 
 Reconciliation is also where hand-coding fits, on the occasions you want it. The process never mandates writing code
 yourself — in practice you rarely start there, using the agent to get into focus until that bleeds into agentic coding
@@ -126,6 +131,10 @@ or started, then left untouched because a newer flow pulled attention away.
 The `triage` skill closes this gap. It surfaces open work oldest-first, bucketed by age, and prompts a
 decision on what has gone stale or is finished. It is the single place closing decisions are made, run as a
 deliberate clear-the-backlog session rather than grafted onto another skill.
+
+Triage output also flags open features that carry no `arch-merged` date as `[arch-pending]` — a second
+actionable bucket alongside `[actionable]` (finishable). A feature can be triage-closed without being
+arch-reconciled; not every feature warrants an architecture update. But the flag keeps it visible.
 
 ## Graphical prompting
 
