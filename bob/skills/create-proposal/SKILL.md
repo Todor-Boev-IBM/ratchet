@@ -67,11 +67,16 @@ Read the full session. Extract:
 
 ### Step 2: Validate Against the Codebase
 
-Before writing, verify the discussion's assumptions:
+Before writing, verify the discussion's assumptions. Ground yourself in two layers:
+
+1. **`docs/architecture/`** — the project's broad-scope structural rules and module boundaries. Read the README and any section files relevant to the proposal's scope. This is authoritative for what the system's shape is meant to be.
+2. **The code itself** — check that referenced types, interfaces, and behavioral properties actually exist as described.
+
+`docs/features/` is historical exhaust — prior loop decisions already absorbed into code. Do not treat it as input to this proposal; it is archaeology, not guidance.
 
 - Do the referenced types/interfaces actually exist as described?
 - Are the claimed behavioral properties accurate?
-- Does the proposal conflict with existing patterns?
+- Does the proposal conflict with existing patterns or architectural principles?
 - Are there dependencies or interactions the discussion missed?
 
 Flag discrepancies. Don't silently paper over them.
@@ -82,10 +87,6 @@ Write a structured markdown document. Use only the sections that apply — skip 
 sections rather than writing "N/A".
 
 ## Proposal Structure
-
-### Title
-
-`# Proposal: [Concise Name]`
 
 ### Problem
 
@@ -209,8 +210,9 @@ A proposal lives inside a feature directory. When you write it:
 1. Create the feature directory `docs/features/<slug>/` and write two files.
 
 `feature.md` — the anchor. Its frontmatter carries the feature's only stored state,
-its `status`. Include a markdown link to `proposal.md` in the body so readers can
-navigate from the index through the feature anchor to the design doc:
+its `status`. Include markdown links to `proposal.md` (and `plan.md` if it already
+exists) in the body so readers can navigate from the index through the feature anchor
+to the design doc:
 
 ```
 ---
@@ -222,13 +224,17 @@ One-line statement of what this feature is.
 [Proposal](proposal.md)
 ```
 
+If a `plan.md` already exists in the feature directory, append `[Plan](plan.md)` to
+the body as well.
+
 Use `status: draft` here — a proposal captures a design without committing to build
 it yet. `create-plan` promotes the feature to `active` when the work is committed, and
 Triage sets `done`/`abandoned` later. Never write `done`/`abandoned` yourself.
 
    `proposal.md` — the design document itself (the structure above). It is pure content;
-   give it at most a `title` in frontmatter and no status of its own. The feature's state
-   lives only on `feature.md`.
+   give it a `title` and `type: proposal` in frontmatter and no status of its own. Do not
+   add an H1 title in the body — the title is already in the frontmatter. The feature's
+   state lives only on `feature.md`.
 
 2. Refresh the index (run from the repo root):
 

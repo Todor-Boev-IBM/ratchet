@@ -66,9 +66,11 @@ When spawning, instruct the sub-agent to prefer `codegraph_explore` over raw `re
 
 - Files, symbols, and patterns directly related to the feature
 - Existing utilities or abstractions that should be reused
-- Architectural patterns and conventions in play
+- Architectural patterns and conventions in play — check `docs/architecture/` for broad-scope structural rules and module boundaries
 - Similar prior implementations to use as reference
 - Testing approach and conventions used nearby
+
+`docs/features/` is historical exhaust — prior loop decisions already absorbed into code. Do not treat it as a grounding source for this plan.
 
 ### Step 2: Confirm readiness
 
@@ -266,8 +268,9 @@ The plan should be:
 A plan lives inside a feature directory. When you write it:
 
 1. Locate or create the feature directory `docs/features/<slug>/`.
-   - If a proposal already created it, reuse the existing `feature.md` and append a
-     `[Plan](plan.md)` link to its body if one is not already there.
+   - If a proposal already created it, reuse the existing `feature.md` and ensure both
+     a `[Proposal](proposal.md)` link and a `[Plan](plan.md)` link are present in its
+     body (append whichever is missing).
    - Otherwise create `feature.md` now:
 
      ```
@@ -284,9 +287,10 @@ A plan lives inside a feature directory. When you write it:
   feature already exists with `status: draft`, promote it to `active`. (Triage sets
   `done`/`abandoned` later; never write those yourself.)
 
-2. Write the plan as `docs/features/<slug>/plan.md`. It is pure content; give it at most a
-   `title` in frontmatter and no status of its own. Its `## Phases` section (the per-phase
-   `### Phase` headings) is the sole progress signal `featuremgr` reads.
+2. Write the plan as `docs/features/<slug>/plan.md`. It is pure content; give it a `title`
+   and `type: plan` in frontmatter and no status of its own. Its `## Phases` section (the
+   per-phase `### Phase` headings) is the sole progress signal `featuremgr` reads. Do not
+   add an H1 title in the body — the title is already in the frontmatter.
 
 3. Refresh the index (run from the repo root):
 
