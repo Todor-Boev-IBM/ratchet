@@ -14,7 +14,7 @@ Replace the parallel `docs/proposals/` + `docs/plans/` layout (paired by filenam
 carrying its own status) with a per-feature directory `docs/features/<slug>/` holding a small
 `feature.md` anchor plus optional `proposal.md` / `plan.md`. A feature's only stored state is a
 single `status` field on `feature.md`; everything else (which artifacts exist, plan completion,
-last-touched) is *derived* by `docmgr` and never written back. `docmgr` becomes read-only with
+last-touched) is *derived* by `featuremgr` and never written back. `featuremgr` becomes read-only with
 respect to content, gains a `triage` surface, and a new Triage skill becomes the single place
 the closing `done`/`abandoned` decisions are made. This solves the real problem — a feature
 portfolio that accumulates across parallel, out-of-order flows with no way to see what is at
@@ -37,7 +37,7 @@ what stage.
   `execute-plan` change behavior and a new `triage` skill is added. Only the `bob/skills/`
   sources are updated in this plan; mirroring into consuming repos' `.github/prompts/` is
   deliberately deferred to a later activity.
-- **Constraint:** `docmgr` is already invoked by the workflow (skills run it), so making it the
+- **Constraint:** `featuremgr` is already invoked by the workflow (skills run it), so making it the
   read/derive surface adds no new dependency. It must remain dependency-free Node.
 - **Supersedes** the abandoned `tool-owned-frontmatter-lifecycle` plan, which centralized
   *more* mutation in the tool; this goes the other way — the tool mutates nothing but the index.
@@ -71,12 +71,12 @@ what stage.
 - `triageView(features) -> Bucket[]` — open-status features (`draft`/`active`) only, ordered
   oldest-touched first, grouped into one-week age bands.
 
-### CLI (`docmgr.mjs`)
+### CLI (`featuremgr.mjs`)
 
-- `docmgr reindex [--docs <dir>] [--out <file>]` — render `index.md` from features; **never**
+- `featuremgr reindex [--docs <dir>] [--out <file>]` — render `index.md` from features; **never**
   writes a feature file. Prints an ambient nudge line: `N finishable, M stale`.
-- `docmgr check [--docs <dir>]` — structural audit only; exit non-zero on problems.
-- `docmgr triage [--docs <dir>]` — **new.** Print the triage view (open statuses, oldest-first,
+- `featuremgr check [--docs <dir>]` — structural audit only; exit non-zero on problems.
+- `featuremgr triage [--docs <dir>]` — **new.** Print the triage view (open statuses, oldest-first,
   weekly bands, with derived facts) for the Triage skill to consume. Read-only.
 
 `docs/features/` may be empty initially; new work populates it. Migrating the existing
@@ -164,14 +164,14 @@ Rules (report-only):
 
 - Add `lib/features.mjs` (load features, derive completion + last-touched); rewrite `render.mjs`
   to group by status and show derived facts; delete pairing/frontmatter-write code paths.
-- Rewire `docmgr reindex` to the feature model; it writes only `index.md`.
+- Rewire `featuremgr reindex` to the feature model; it writes only `index.md`.
 - Deliverable: against a fixture `docs/features/` tree, `reindex` produces a correct
   status-grouped `index.md` and touches no feature file.
 
 ### Phase 2: check and triage surfaces ✅ 2026-07-19
 
-- Implement `validateFeatures` and wire `docmgr check`; implement `triageView` and add
-  `docmgr triage`; add the `N finishable, M stale` nudge line to `reindex` output.
+- Implement `validateFeatures` and wire `featuremgr check`; implement `triageView` and add
+  `featuremgr triage`; add the `N finishable, M stale` nudge line to `reindex` output.
 - Deliverable: `check` flags each structural violation on a fixture; `triage` lists open
   features oldest-first in weekly bands with artifacts + completion.
 
@@ -188,7 +188,7 @@ Rules (report-only):
 
 ### Phase 4: Triage skill; confirm commit skills untouched ✅ 2026-07-19
 
-- Add a `triage` skill that runs `docmgr triage`, walks the open features (oldest-first bands),
+- Add a `triage` skill that runs `featuremgr triage`, walks the open features (oldest-first bands),
   prompts keep / `done` / `abandoned` per feature, and writes the chosen `status` to
   `feature.md`.
 - Verify `prepare-next-commit` / `prepare-single-commit` carry no triage logic.

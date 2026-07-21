@@ -1,65 +1,62 @@
-# Process
-
-The workflow is fluid to maintain developer focus in real world use, rather than a pipeline.
-
-The diagram below sketches the phases and how they connect; the sections that follow describe how the work actually
-flows through them.
-
-![Bob Coding Agent Flow](coding-agent-flow-agent-flow.svg)
+# Ratchet Process
 
 ## Principles
 
 ### The scarce resource is attention
 
-Agentic execution runs in the background, so the human's scarce resource is attention. The whole process
-is arranged to keep that attention at an optimal load and spend it on whichever layer has the most leverage —
-architecture research, planning, review. Each phase manages the load in its own way:
+The workflow's goal to improve the cognitive ability of a single developer.
+
+The whole process is arranged to keep that attention at an optimal load:
 
 - Ideation carries you over the initial hump of getting focused; starting cold is hard.
 - Research and planning hold you at that high-leverage layer rather than dropping you into execution.
 - Execution runs in the background, so the slow work costs little attention and keeps fatigue low.
-- Reconciliation is unavoidable, but it is timed to run while the agent still holds context, so you can interrogate
+- Reconciliation is unavoidable, but it timed to happen when the agent still holds context, so you can interrogate
   it about the code and switch focus more easily.
 - The generated code is good enough to carry forward, so when you choose to hand-code you don't start cold.
 
 Because ideation is fast and cheap while executing a plan is slow, ideas outrun execution and a backlog can form.
-The process is built to tolerate that imbalance.
+The process is built to manage this imbalance.
 
 ### The code is the ground truth
 
 The process serves one durable asset: the code, and the `docs/architecture` prose that speaks its principles to
-people. Every session begins here, grounded in the code and its documentation rather than in some higher artifact the
-code merely expresses. Code is not the last-mile output of a design; it is the thing the whole process exists to grow.
+people. Every session begins grounded in the code rather than in some higher artifact the code merely expresses.
 
-Its principles live at two scales. The large ones — module boundaries, data formats, the shape of a component's
-behavior — are captured in the `docs/architecture` set; the small ones need no document at all, because the code
-enforces them by example and the agent reads them straight from the source. Those documents also change character over
-the life of the project: concrete and code-like early on, they shed their specificity as the code realizes them and
-harden into principle — the enduring rules the code now embodies.
+Its grounding principles live at two scales:
+
+- High level — captured in `docs/architecture`. These are module boundaries and roles, data formats, enduring principles.
+- Low level - what clean code looks like, libraries to prefer etc. These need almost no documentation, because
+  the code enforces them by example.
+  
+The two morph over the lifetime of the project. At first there is no code so the architecture documents are much
+more code-like. Not only module roles for example, but descriptions of exact module behavior with code snippets.
+As this information is transfered into code the architecture documents solidify into a more structural description,
+general behavior rules, actheicture decisions (transferred from proposals).
 
 Everything else the process produces is temporal. A proposal captures a design worth doing, a plan its implementation;
 each is only a point-in-time grounding — future intent when captured, present while the work runs, past once it has
-run — that ages out of sync and can be discarded. The enduring grounding is the code and its architecture
-documentation, which the process keeps current.
+run — that ages out of sync and can be discarded.
 
 ### The codebase compounds
 
 You are never working on a blank page. Each loop leaves behind more examples for the agent.
-The agent's next batch of code is only as good as the code it can already see.
-Regularity and quality compound at a steady rate.
-Conversely ambiguity compounds technical debt at an accelerating rate.
+Regularity and quality compound at a steady rate. Conversely ambiguity compounds technical debt at an accelerating rate.
 
 So the quality maintained now buys a higher success rate on every loop that follows. As the codebase grows and its
-principles become legible in the code itself, it gets *easier* to add to, not harder — every loop partly an investment
-in the next. This is the virtuous loop.
+principles become legible in the code itself, it gets *easier* to add to rather than harder.
 
-The catch is that documents and code never stay perfectly in sync; in the real world both always drift. Part of the
-work is keeping that gap small enough that the codebase stays a reliable teacher for the next loop.
+The architecture documents and code never stay perfectly in sync, you can't spend each loop on both.
+Part of the work is to keep the gap small enough so they complement rather than contradict.
+
+![Ratchet Loop](ratchet-loop.svg)
 
 ## The arc of a feature
 
 A representative pass moves through four styles of work. Each uses a different interaction style and, where the model
 can be detected, a different class of model.
+
+![Ratchet Flow](ratchet-agent-flow.svg)
 
 ### Load
 
@@ -70,8 +67,6 @@ Within that goal the session may run long as both the human and agent understand
 Here you load the problem constraints into context and use the agent to discover blind spots, so the
 *Communication Style* is critical.
 
-The agent helps in overcoming the initial mental hump of ramping up your attention to get into flow.
-
 ### Capture
 
 When the context crystallizes, record it: `/create-proposal` for a design record worth doing, `/create-plan` for an
@@ -81,9 +76,9 @@ capture skill. Either or both may be produced; sometimes the capture happens and
 
 ### Execute
 
-Batch-job style; model chosen by complexity. `/execute-plan` steps through the plan's phases, creating and
-fixing tests as it goes. This is the slow part, and it runs in the background while fresh ideation sessions
-start.
+Batch-job style; model chosen by complexity.
+
+The `/execute-plan` steps through the plan's phases. This is the slow part, and it runs in the background while fresh ideation sessions start.
 
 ### Reconcile
 
