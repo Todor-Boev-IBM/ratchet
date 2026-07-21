@@ -40,7 +40,7 @@ Scan the `### Phase` headings under `## Phases` for their status token:
 
 The text tokens (`[done]`, `[wip]`) are what the tooling looks for; the emoji are decorative
 and purely for human readability. Write whichever representation you prefer, but always include
-the text token so `docmgr` can parse it.
+the text token so `featuremgr` can parse it.
 
 If every phase has `[done]`, inform the user the plan is complete and exit.
 If a phase has `[wip]`, resume from it — re-verify its partial work before continuing, since it
@@ -108,9 +108,9 @@ Goals:
 ```
 
 Tokens: `[done]` (with optional `✅` and date) = done, `[wip]` (with optional `⏳`) = in
-progress (the crash-recovery point), no token = not started. The emoji are decorative — `docmgr`
+progress (the crash-recovery point), no token = not started. The emoji are decorative — `featuremgr`
 only reads the text tokens. The goal/deliverable prose lives under each heading and is left
-untouched. `docmgr` counts `[done]` phases against the total number of `### Phase` headings as
+untouched. `featuremgr` counts `[done]` phases against the total number of `### Phase` headings as
 the feature's completion.
 
 ## Execution Rules
@@ -132,7 +132,7 @@ This command is designed to be invoked multiple times on the same plan:
 
 This makes it safe to interrupt and resume long plans across multiple sessions.
 
-## Feature lifecycle (docmgr)
+## Feature lifecycle (featuremgr)
 
 A plan lives in a feature directory `docs/features/<slug>/`. The feature's only stored state
 is the `status` field on `feature.md`; plan progress is the `## Phases` section's per-phase
@@ -147,7 +147,11 @@ index derives — it is never copied into frontmatter.
 - After marking a phase `✅` or changing status, refresh the index (run from the repo root):
 
   ```
-  node ~/.bob/tools/docmgr.mjs reindex
+  node ../featuremgr/featuremgr.mjs reindex
   ```
 
-- Audit at any time with `node ~/.bob/tools/docmgr.mjs check`.
+  The path is relative to this skill's own directory (`featuremgr` is a sibling skill under the
+  same `skills/` root); resolve it from wherever this `SKILL.md` was loaded from, not from
+  the shell's current working directory.
+
+- Audit at any time with `node ../featuremgr/featuremgr.mjs check` (same sibling-relative path).

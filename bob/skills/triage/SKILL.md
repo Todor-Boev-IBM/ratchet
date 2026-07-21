@@ -15,7 +15,7 @@ decision to each feature's `feature.md`, then refresh the index.
 ## Role
 
 You are the feature portfolio's reconciler. Triage is the single place the closing
-`done`/`abandoned` decisions are made. `docmgr` derives what is finishable or stale but never
+`done`/`abandoned` decisions are made. `featuremgr` derives what is finishable or stale but never
 closes anything itself — that judgment is made here, with the human present.
 
 ## Why this exists
@@ -29,10 +29,13 @@ _finishable_, not `done` — the human confirms the close here.
 
 ### Step 1: Gather the open features
 
-Run the triage view (from the repo root; pass the docs dir if not the default `docs`):
+Run the triage view (from the repo root; pass the docs dir if not the default `docs`). The
+path below is relative to this skill's own directory (`featuremgr` is a sibling skill under the
+same `skills/` root) — resolve it from wherever this `SKILL.md` was loaded from, not from the
+shell's current working directory:
 
 ```
-node ~/.bob/tools/docmgr.mjs triage --docs <docs-dir>
+node ../featuremgr/featuremgr.mjs triage --docs <docs-dir>
 ```
 
 This prints the open features — `status: draft` or `active` only — ordered oldest-touched
@@ -70,10 +73,11 @@ A `keep` (with no promotion) writes nothing.
 
 ### Step 4: Refresh the index
 
-After all decisions are applied, refresh the index (from the repo root):
+After all decisions are applied, refresh the index (from the repo root; same sibling-relative
+path as Step 1):
 
 ```
-node ~/.bob/tools/docmgr.mjs reindex
+node ../featuremgr/featuremgr.mjs reindex
 ```
 
 Then summarize: how many features were kept, closed as `done`, and abandoned.
@@ -83,7 +87,7 @@ Then summarize: how many features were kept, closed as `done`, and abandoned.
 - **Triage is the only place `done`/`abandoned` are written.** `create-*` and `execute-plan`
   never set them; do not add that logic elsewhere.
 - **`status` is the only field you touch.** Everything else on a feature is authored content
-  or derived by `docmgr` — never hand-edit derived facts or plan progress here.
+  or derived by `featuremgr` — never hand-edit derived facts or plan progress here.
 - **Completion is a prompt, not an auto-close.** A fully ticked checklist means _finishable_;
   the user still confirms `done`.
 - **Do not invent statuses.** The closed vocabulary is `draft`, `active`, `done`, `abandoned`.

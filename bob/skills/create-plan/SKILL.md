@@ -202,7 +202,7 @@ High-level only:
 #### 6. Phases
 
 Break work into 3–7 major phases, written as `### Phase <number>: Name` sub-headings under a
-`## Phases` container. The container heading text must begin with `Phases` so `docmgr` can
+`## Phases` container. The container heading text must begin with `Phases` so `featuremgr` can
 find it and derive completion; each phase is a `### Phase` heading with its goal and
 deliverable as prose beneath it:
 
@@ -228,7 +228,7 @@ Deliverable: ...
 
 Emit each phase heading with **no status marker** on creation. `execute-plan` adds the
 markers during execution: `⏳` when it starts a phase (the crash-recovery point) and `✅`
-plus the date when it finishes. `docmgr` counts `✅` phases against the total number of
+plus the date when it finishes. `featuremgr` counts `✅` phases against the total number of
 `### Phase` headings to derive completion. Subphases like `Phase 2a` are allowed when
 refining a plan. Do not break phases into individual tasks or file-by-file changes.
 
@@ -261,12 +261,13 @@ The plan should be:
 - **Actionable** — clear phases with measurable completion criteria
 - **Minimal** — only critical details that must be decided upfront
 
-## Register the plan (docmgr)
+## Register the plan (featuremgr)
 
 A plan lives inside a feature directory. When you write it:
 
 1. Locate or create the feature directory `docs/features/<slug>/`.
-   - If a proposal already created it, reuse the existing `feature.md`.
+   - If a proposal already created it, reuse the existing `feature.md` and append a
+     `[Plan](plan.md)` link to its body if one is not already there.
    - Otherwise create `feature.md` now:
 
      ```
@@ -275,6 +276,8 @@ A plan lives inside a feature directory. When you write it:
      status: active
      ---
      One-line statement of what this feature is.
+
+     [Plan](plan.md)
      ```
 
   Set `status: active` — writing a plan commits the feature to implementation. If the
@@ -283,13 +286,16 @@ A plan lives inside a feature directory. When you write it:
 
 2. Write the plan as `docs/features/<slug>/plan.md`. It is pure content; give it at most a
    `title` in frontmatter and no status of its own. Its `## Phases` section (the per-phase
-   `### Phase` headings) is the sole progress signal `docmgr` reads.
+   `### Phase` headings) is the sole progress signal `featuremgr` reads.
 
 3. Refresh the index (run from the repo root):
 
    ```
-   node ~/.bob/tools/docmgr.mjs reindex
+   node ../featuremgr/featuremgr.mjs reindex
    ```
 
-   If the reindex command fails or the file is not found, note the failure in chat and
-   proceed — the plan document is still valid without the index update.
+   The path is relative to this skill's own directory (`featuremgr` is a sibling skill under the
+   same `skills/` root); resolve it from wherever this `SKILL.md` was loaded from, not from
+   the shell's current working directory. If the reindex command fails or the file is not
+   found, note the failure in chat and proceed — the plan document is still valid without
+   the index update.

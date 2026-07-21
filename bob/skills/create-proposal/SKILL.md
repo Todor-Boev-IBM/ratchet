@@ -202,14 +202,15 @@ If the session contains fewer than 3 concrete design decisions or lacks a clear 
 statement, ask clarifying questions before writing. A proposal from an incomplete
 discussion is worse than no proposal.
 
-## Register the feature (docmgr)
+## Register the feature (featuremgr)
 
 A proposal lives inside a feature directory. When you write it:
 
 1. Create the feature directory `docs/features/<slug>/` and write two files.
 
 `feature.md` — the anchor. Its frontmatter carries the feature's only stored state,
-its `status`:
+its `status`. Include a markdown link to `proposal.md` in the body so readers can
+navigate from the index through the feature anchor to the design doc:
 
 ```
 ---
@@ -217,6 +218,8 @@ title: "<Feature Title>"
 status: draft
 ---
 One-line statement of what this feature is.
+
+[Proposal](proposal.md)
 ```
 
 Use `status: draft` here — a proposal captures a design without committing to build
@@ -230,8 +233,11 @@ Triage sets `done`/`abandoned` later. Never write `done`/`abandoned` yourself.
 2. Refresh the index (run from the repo root):
 
    ```
-   node ~/.bob/tools/docmgr.mjs reindex
+   node ../featuremgr/featuremgr.mjs reindex
    ```
 
-   If the reindex command fails or the tool is not found, note the failure in your response
-   and instruct the user to run it manually before proceeding.
+   The path is relative to this skill's own directory (`featuremgr` is a sibling skill under the
+   same `skills/` root); resolve it from wherever this `SKILL.md` was loaded from, not from
+   the shell's current working directory. If the reindex command fails or the tool is not
+   found, note the failure in your response and instruct the user to run it manually before
+   proceeding.

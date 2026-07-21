@@ -7,6 +7,7 @@ The `bob/` directory in this repo mirrors the structure of the `.bob` directory 
 ```sh
 cp -r bob/rules/*    ~/.bob/rules/
 cp -r bob/skills/*   ~/.bob/skills/
+cp -r bob/.ratchet   ~/.bob/.ratchet
 cp    bob/settings/mcp.json          ~/.bob/settings/mcp.json
 cp    bob/settings/custom_modes.yaml ~/.bob/settings/custom_modes.yaml
 ```
