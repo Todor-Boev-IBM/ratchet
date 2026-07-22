@@ -11,9 +11,9 @@ The whole process is arranged to keep that attention at an optimal load:
 - Ideation carries you over the initial hump of getting focused; starting cold is hard.
 - Research and planning hold you at that high-leverage layer rather than dropping you into execution.
 - Execution runs in the background, so the slow work costs little attention and keeps fatigue low.
-- Reconciliation is unavoidable, but it timed to happen when the agent still holds context, so you can interrogate
+- Reconciliation is unavoidable, but is timed to happen when the agent still holds context, so you can interrogate
   it about the code and switch focus more easily.
-- The generated code is good enough to carry forward, so when you choose to hand-code you don't start cold.
+- The generated code is good enough to carry forward, so when you choose to hand-code you don't start from scratch.
 
 Because ideation is fast and cheap while executing a plan is slow, ideas outrun execution and a backlog can form.
 The process is built to manage this imbalance.
@@ -49,14 +49,14 @@ principles become legible in the code itself, it gets *easier* to add to rather 
 The architecture documents and code never stay perfectly in sync, you can't spend each loop on both.
 Part of the work is to keep the gap small enough so they complement rather than contradict.
 
-![Ratchet Loop](ratchet-loop.svg)
+![Ratchet Loop](architecture-loop.svg)
 
 ## The arc of a feature
 
 A representative pass moves through four styles of work. Each uses a different interaction style and, where the model
 can be detected, a different class of model.
 
-![Ratchet Flow](ratchet-agent-flow.svg)
+![Ratchet Flow](architecture-flow.svg)
 
 ### Load
 
@@ -71,8 +71,7 @@ Here you load the problem constraints into context and use the agent to discover
 
 When the context crystallizes, record it: `/create-proposal` for a design record worth doing, `/create-plan` for an
 implementation plan detailed enough for an agent to build against. Crystallization is often a deliberate step — asking
-the agent to summarize what has been discovered so far, which both consolidates the understanding and primes it for the
-capture skill. Either or both may be produced; sometimes the capture happens and the work is set aside for later.
+the agent to summarize what has been discovered so far. This both consolidates your understanding and primes the agent for the capture skill.
 
 ### Execute
 
@@ -84,25 +83,20 @@ The `/execute-plan` steps through the plan's phases. This is the slow part, and 
 
 Chat style, powerful model.
 
-Completing execution leads straight into the recover-quality phase rather than deferring it: review by hand,
-challenge the agent to reduce code, run the `Simplify` mode, and use `/identify-low-value-tests` to prune weak
-tests.
+Completing execution leads straight into the recover-quality phase rather than deferring it:
 
-The goal is to fit the new code cleanly into the codebase — maintaining the principles the code embodies, and
-syncing what changed back into the `docs/architecture` set so the larger principles keep pace. This is the
-loop's investment in the next one: the quality maintained here is what the agent imitates next time.
+- Review code by hand
+- Challenge the agent to explain and remove redundancies reduce code
+- Run the `Simplify` mode
+- Run `/identify-low-value-tests` - agents often create large amounts of near-useless tests
+- Run `/reconcile-arch` to transfer completed architecture decisions to `/docs/architecture`
 
-Use `/reconcile-arch <slug>` to transfer a completed feature's architectural decisions into `docs/architecture`.
-The skill reads the feature's proposal and plan, maps each decision against the existing architecture tree, and
-produces a gap analysis in chat before writing anything. When the updates are confirmed it stamps
-`arch-merged: <date>` on the feature record as a provenance timestamp.
-
-Reconciliation is also where hand-coding fits, on the occasions you want it. The process never mandates writing code
-yourself — in practice you rarely start there, using the agent to get into focus until that bleeds into agentic coding
-on its own. But the loop is fluid, and the code it produces is a base rather than a blank page, so whenever you would
-rather shape something by hand, this is the natural place to drop out of the agentic loop and do it.
+This is this loop's investment in the next one: the quality maintained here is what the agent imitates next time.
 
 Here the human repays the *comprehension debt* accumulated while not paying attention to the execution phase.
+
+Here is where you can drop into hand-coding. The agent produces code that hits the right APIs, has the overall structure
+you want, etc. It is easier to start from something, clean it and take if forward than to start from scratch.
 
 ### Commit
 
