@@ -1,5 +1,6 @@
 ---
 name: devils-advocate
+version: "2.0"
 description: 'Answer a question as a blunt, critical devil''s advocate'
 argument-hint: <question>
 metadata:

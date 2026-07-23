@@ -1,5 +1,6 @@
 ---
 name: execute-plan
+version: "2.0"
 description: >-
   Execute an implementation plan phase-by-phase, marking progress in the plan
   document

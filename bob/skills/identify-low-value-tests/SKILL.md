@@ -1,5 +1,6 @@
 ---
 name: identify-low-value-tests
+version: "2.0"
 description: Identify low-value tests in a test file
 argument-hint: <test-file-path>
 metadata:

@@ -1,5 +1,6 @@
 ---
 name: create-plan
+version: "2.0"
 description: Build an implementation plan for a coding agent
 argument-hint: '<feature>'
 metadata:
@@ -66,11 +67,13 @@ When spawning, instruct the sub-agent to prefer `codegraph_explore` over raw `re
 
 - Files, symbols, and patterns directly related to the feature
 - Existing utilities or abstractions that should be reused
-- Architectural patterns and conventions in play — check `docs/architecture/` for broad-scope structural rules and module boundaries
+- Architectural patterns and conventions in play — check `docs/architecture/` for broad-scope structural rules and
+  module boundaries
 - Similar prior implementations to use as reference
 - Testing approach and conventions used nearby
 
-`docs/features/` is historical exhaust — prior loop decisions already absorbed into code. Do not treat it as a grounding source for this plan.
+`docs/features/` is historical exhaust — prior loop decisions already absorbed into code.
+Do not treat it as a grounding source for this plan.
 
 ### Step 2: Confirm readiness
 
@@ -85,10 +88,9 @@ Check three things honestly:
 - Do you see a way this degrades the architecture that the loaded context never addressed?
 - Are the requirements concrete enough to structure a _how_?
 
-**If any fails — the why is missing, you spot an unaddressed problem, or requirements are
-ambiguous — stop. Do not write the plan.** Push back in chat: this is the signal that the
-session skipped a step and needs clarification or a proposal first, not that you should fill
-the gap yourself.
+**If any fails — the why is missing, you spot an unaddressed problem, or requirements are ambiguous — stop. Do not write the plan.**
+Push back in chat: this is the signal that the session skipped a step and needs clarification or a proposal first,
+not that you should fill the gap yourself.
 
 **If all hold:** you have the grounding. You do not need a proposal — if you deliberately
 skipped one, the _why_ stays in this session by your choice. Either way, the plan itself will
@@ -204,9 +206,8 @@ High-level only:
 #### 6. Phases
 
 Break work into 3–7 major phases, written as `### Phase <number>: Name` sub-headings under a
-`## Phases` container. The container heading text must begin with `Phases` so `featuremgr` can
-find it and derive completion; each phase is a `### Phase` heading with its goal and
-deliverable as prose beneath it:
+`## Phases` container. Each phase is a `### Phase` heading with its goal and deliverable as
+prose beneath it:
 
 ```markdown
 ## Phases
@@ -228,11 +229,8 @@ Goals:
 Deliverable: ...
 ```
 
-Emit each phase heading with **no status marker** on creation. `execute-plan` adds the
-markers during execution: `⏳` when it starts a phase (the crash-recovery point) and `✅`
-plus the date when it finishes. `featuremgr` counts `✅` phases against the total number of
-`### Phase` headings to derive completion. Subphases like `Phase 2a` are allowed when
-refining a plan. Do not break phases into individual tasks or file-by-file changes.
+Subphases like `Phase 2a` are allowed when refining a plan. Do not break phases into
+individual tasks or file-by-file changes.
 
 #### 7. Open Questions
 

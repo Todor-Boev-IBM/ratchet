@@ -1,5 +1,6 @@
 ---
 name: prepare-next-commit
+version: "2.0"
 description: Create the next atomic git commit from unstaged changes
 argument-hint: <project>
 metadata:

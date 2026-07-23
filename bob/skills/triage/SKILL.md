@@ -1,5 +1,6 @@
 ---
 name: triage
+version: "2.0"
 description: Reconcile open features — decide done or abandoned per feature
 argument-hint: '[docs-dir]'
 metadata:

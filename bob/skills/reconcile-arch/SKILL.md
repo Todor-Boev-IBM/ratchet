@@ -1,5 +1,6 @@
 ---
 name: reconcile-arch
+version: "2.0"
 description: >-
   Transfer architectural decisions from a completed feature into docs/architecture,
   then stamp arch-merged on the feature record. Use when a feature's plan is complete

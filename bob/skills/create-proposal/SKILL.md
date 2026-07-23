@@ -1,5 +1,6 @@
 ---
 name: create-proposal
+version: "2.0"
 description: Distill a design discussion into a proposal document
 argument-hint: <feature>
 metadata:
