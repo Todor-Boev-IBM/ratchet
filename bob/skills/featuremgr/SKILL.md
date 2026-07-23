@@ -1,5 +1,6 @@
 ---
 name: featuremgr
+version: "2.0"
 description: Internal tool bundle — not a standalone skill. Provides the featuremgr.mjs
   CLI (reindex/check/triage) that other ratchet skills invoke directly by sibling path.
 metadata:

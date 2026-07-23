@@ -15,7 +15,8 @@
 // repair) entirely — none of that survives here.
 
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
+import { spawnSync } from 'node:child_process'
 import { parseFrontmatter } from './markdown.mjs'
 
 // The closed vocabulary of feature statuses. `draft`/`active` are "open"
@@ -95,25 +96,26 @@ export function derivePlanCompletion(planBody) {
   return total === 0 ? null : { checked, total }
 }
 
-// Last-touched = the newest file mtime anywhere under `featureDir`, so any edit
-// to any of a feature's files refreshes it. Known weakness: mtime is reset by
-// fresh clones/checkouts (see the plan's Open Questions); accepted for v1.
-export function deriveLastTouched(featureDir) {
-  let newest = 0
-  for (const file of listFiles(featureDir)) {
-    try {
-      const { mtimeMs } = statSync(file)
-      if (mtimeMs > newest) newest = mtimeMs
-    } catch {
-      // ignore files that vanish between listing and stat
-    }
+// Run: git log -1 --format="%aI" -- <featureDir>
+// Returns ISO timestamp of newest commit touching any file under featureDir,
+// or 0 if git is unavailable or the directory has never been committed.
+export function deriveLastTouched(featureDir, repoRoot = resolve(featureDir, '../../..')) {
+  try {
+    const result = spawnSync('git', ['log', '-1', '--format=%aI', '--', featureDir], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    })
+    const iso = result.stdout.trim()
+    if (!iso) return 0 // never committed → unknown
+    return new Date(iso).getTime()
+  } catch {
+    return 0 // git not available → unknown
   }
-  return newest
 }
 
 // --- loading -----------------------------------------------------------------
 
-function loadFeature(dir, slug) {
+function loadFeature(dir, slug, repoRoot) {
   const featureFile = join(dir, 'feature.md')
   let hasFeatureFile = true
   let data = {}
@@ -143,14 +145,14 @@ function loadFeature(dir, slug) {
     hasProposal,
     hasPlan,
     planCompletion,
-    lastTouched: deriveLastTouched(dir),
+    lastTouched: deriveLastTouched(dir, repoRoot),
   }
 }
 
 // Walk docs/features/*/ (one directory per feature), parse each feature.md, and
 // attach derived facts. Pure read — no file is written. Sorted by slug for
 // stable output.
-export function loadFeatures(docsDir) {
+export function loadFeatures(docsDir, repoRoot = resolve(docsDir, '..')) {
   const featuresDir = join(docsDir, 'features')
   let entries
   try {
@@ -160,7 +162,7 @@ export function loadFeatures(docsDir) {
   }
   return entries
     .filter(entry => entry.isDirectory())
-    .map(entry => loadFeature(join(featuresDir, entry.name), entry.name))
+    .map(entry => loadFeature(join(featuresDir, entry.name), entry.name, repoRoot))
     .sort((a, b) => a.slug.localeCompare(b.slug))
 }
 
@@ -241,3 +243,4 @@ export function ambientCounts(features, now = Date.now()) {
   }
   return { finishable, stale }
 }
+
