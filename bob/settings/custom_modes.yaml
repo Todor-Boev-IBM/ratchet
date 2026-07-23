@@ -1,4 +1,5 @@
 customModes:
+  # version: 2.0
   - slug: research
     name: 🧭 Research
     description: Research, ideation, and design artifact creation. Full read and
