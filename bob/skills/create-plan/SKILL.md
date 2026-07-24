@@ -1,6 +1,5 @@
 ---
 name: create-plan
-version: "2.0"
 description: Build an implementation plan for a coding agent
 argument-hint: '<feature>'
 metadata:
@@ -67,13 +66,11 @@ When spawning, instruct the sub-agent to prefer `codegraph_explore` over raw `re
 
 - Files, symbols, and patterns directly related to the feature
 - Existing utilities or abstractions that should be reused
-- Architectural patterns and conventions in play — check `docs/architecture/` for broad-scope structural rules and
-  module boundaries
+- Architectural patterns and conventions in play — check `docs/architecture/` for broad-scope structural rules and module boundaries
 - Similar prior implementations to use as reference
 - Testing approach and conventions used nearby
 
-`docs/features/` is historical exhaust — prior loop decisions already absorbed into code.
-Do not treat it as a grounding source for this plan.
+`docs/features/` is historical exhaust — prior loop decisions already absorbed into code. Do not treat it as a grounding source for this plan.
 
 ### Step 2: Confirm readiness
 
@@ -88,9 +85,10 @@ Check three things honestly:
 - Do you see a way this degrades the architecture that the loaded context never addressed?
 - Are the requirements concrete enough to structure a _how_?
 
-**If any fails — the why is missing, you spot an unaddressed problem, or requirements are ambiguous — stop. Do not write the plan.**
-Push back in chat: this is the signal that the session skipped a step and needs clarification or a proposal first,
-not that you should fill the gap yourself.
+**If any fails — the why is missing, you spot an unaddressed problem, or requirements are
+ambiguous — stop. Do not write the plan.** Push back in chat: this is the signal that the
+session skipped a step and needs clarification or a proposal first, not that you should fill
+the gap yourself.
 
 **If all hold:** you have the grounding. You do not need a proposal — if you deliberately
 skipped one, the _why_ stays in this session by your choice. Either way, the plan itself will
@@ -206,8 +204,9 @@ High-level only:
 #### 6. Phases
 
 Break work into 3–7 major phases, written as `### Phase <number>: Name` sub-headings under a
-`## Phases` container. Each phase is a `### Phase` heading with its goal and deliverable as
-prose beneath it:
+`## Phases` container. The container heading text must begin with `Phases` so `featuremgr` can
+find it and derive completion; each phase is a `### Phase` heading with its goal and
+deliverable as prose beneath it:
 
 ```markdown
 ## Phases
@@ -229,8 +228,12 @@ Goals:
 Deliverable: ...
 ```
 
-Subphases like `Phase 2a` are allowed when refining a plan. Do not break phases into
-individual tasks or file-by-file changes.
+Emit each phase heading with **no status marker** on creation. `execute-plan` adds the
+markers during execution: `⏳` when it starts a phase (the crash-recovery point) and `✅`
+plus the date when it finishes. `featuremgr` counts `✅` phases against the total number of
+`### Phase` headings to derive completion. The exact grammar is in
+[plan-phases](../featuremgr/plan-phases.md). Subphases like `Phase 2a` are allowed when
+refining a plan. Do not break phases into individual tasks or file-by-file changes.
 
 #### 7. Open Questions
 
@@ -265,39 +268,28 @@ The plan should be:
 
 A plan lives inside a feature directory. When you write it:
 
-1. Locate or create the feature directory `docs/features/<slug>/`.
-   - If a proposal already created it, reuse the existing `feature.md` and ensure both
-     a `[Proposal](proposal.md)` link and a `[Plan](plan.md)` link are present in its
-     body (append whichever is missing).
-   - Otherwise create `feature.md` now:
-
-     ```
-     ---
-     title: "<Feature Title>"
-     status: active
-     ---
-     One-line statement of what this feature is.
-
-     [Plan](plan.md)
-     ```
-
-  Set `status: active` — writing a plan commits the feature to implementation. If the
-  feature already exists with `status: draft`, promote it to `active`. (Triage sets
-  `done`/`abandoned` later; never write those yourself.)
-
-2. Write the plan as `docs/features/<slug>/plan.md`. It is pure content; give it a `title`
+1. Write `plan.md` as `docs/features/<slug>/plan.md`. It is pure content; give it a `title`
    and `type: plan` in frontmatter and no status of its own. Its `## Phases` section (the
    per-phase `### Phase` headings) is the sole progress signal `featuremgr` reads. Do not
    add an H1 title in the body — the title is already in the frontmatter.
 
-3. Refresh the index (run from the repo root):
+2. Register with `featuremgr` (run from the repo root; the path is relative to this skill's
+   own directory — `featuremgr` is a sibling skill under the same `skills/` root):
 
    ```
+   # If no feature.md exists yet, create it:
+   node ../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
+
+   # Transition to active (verifies plan.md exists and has ## Phases):
+   node ../featuremgr/featuremgr.mjs mark <slug> active
+
+   # Rebuild the index:
    node ../featuremgr/featuremgr.mjs reindex
    ```
 
-   The path is relative to this skill's own directory (`featuremgr` is a sibling skill under the
-   same `skills/` root); resolve it from wherever this `SKILL.md` was loaded from, not from
-   the shell's current working directory. If the reindex command fails or the file is not
-   found, note the failure in chat and proceed — the plan document is still valid without
-   the index update.
+   If the feature was already created by `create-proposal` (feature.md exists at `draft`),
+   skip `init` and go straight to `mark`. The `mark` command promotes `draft → active`
+   after confirming the plan is ready.
+
+   If any command fails or is not found, note the failure in chat and proceed — the plan
+   document is still valid without the registration step.

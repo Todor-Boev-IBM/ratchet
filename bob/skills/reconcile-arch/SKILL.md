@@ -1,22 +1,26 @@
 ---
 name: reconcile-arch
-version: "2.0"
+version: '2.0'
 description: >-
   Transfer architectural decisions from a completed feature into docs/architecture,
   then stamp arch-merged on the feature record. Use when a feature's plan is complete
   and its decisions have not yet been absorbed into the architecture docs.
-argument-hint: <feature-slug>
+argument-hint: <feature.md>
 metadata:
-  disable-model-invocation: false
+  disable-model-invocation: true
 ---
 
 ## Task
 
-Run an architecture reconciliation session for the feature at `docs/features/<slug>/`.
+`$1` must point to an existing `feature.md`. Run an architecture reconciliation session for
+that feature (its directory is the parent of `$1`).
 Extract its captured architectural decisions, compare them against the project's
 `docs/architecture/` tree, present a gap analysis in chat, collaborate with the human
 on targeted updates, then stamp `arch-merged: <today>` on `feature.md` and refresh
 the index.
+
+**Precondition:** if `$1` is missing or does not point to an existing `feature.md`, **STOP**
+and report the problem — do not search `docs/features/` for a feature to reconcile.
 
 ## Role
 
@@ -39,7 +43,7 @@ absorbed.
 
 ### Step 1: Read the feature artifacts
 
-The feature directory is `docs/features/<slug>/`. Read, in this order:
+The feature directory is the parent of `$1` (the given `feature.md`). Read, in this order:
 
 1. **`proposal.md`** — primary source of architectural decisions, rationale, and
    trade-offs. Read it in full.
@@ -107,19 +111,15 @@ decision genuinely introduces a concept that has no existing anchor.
 After the human confirms that all warranted updates have been applied, write the
 provenance timestamp to `feature.md`:
 
-1. Open `docs/features/<slug>/feature.md` and add (or update) the `arch-merged` field
+1. Open `$1` (the feature's `feature.md`) and add (or update) the `arch-merged` field
    in the frontmatter:
 
    ```yaml
-   arch-merged: <YYYY-MM-DD>   # today's date
+   arch-merged: <YYYY-MM-DD> # today's date
    ```
 
-2. Refresh the index (run from the repo root; `featuremgr` is a sibling skill under the
-   same `skills/` root — resolve the path from wherever this `SKILL.md` was loaded):
-
-   ```
-   node ../featuremgr/featuremgr.mjs reindex
-   ```
+2. Refresh the index: `node ../featuremgr/featuremgr.mjs reindex` (see
+   [cli](../featuremgr/cli.md) for the sibling-path caveat).
 
 3. Confirm to the human: "arch-merged stamped; index refreshed."
 
