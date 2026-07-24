@@ -1,5 +1,28 @@
 {
   "mcpServers": {
+    "searxng": {
+      "command": "npx",
+      "args": ["-y", "mcp-searxng"],
+      "env": { "SEARXNG_URL": "http://localhost:58080" },
+      "type": "stdio",
+      "alwaysAllow": ["searxng_web_search", "web_url_read"]
+    },
+    "tavily": {
+      "command": "npx",
+      "args": ["-y", "tavily-mcp"],
+      "env": { "TAVILY_API_KEY": "add your own" },
+      "alwaysAllow": ["tavily_search", "tavily_extract", "tavily_crawl", "tavily_map", "tavily_research"]
+    },
+    "serper-search": {
+      "command": "npx",
+      "args": ["-y", "serper-search-scrape-mcp-server"],
+      "env": { "SERPER_API_KEY": "<enter key>" }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp", "--api-key", "<enter key>"],
+      "alwaysAllow": ["resolve-library-id", "query-docs"]
+    },
     "markitdown": {
       "command": "docker",
       "args": [
@@ -16,19 +39,6 @@
       ],
       "type": "stdio",
       "alwaysAllow": ["convert_to_markdown"]
-    },
-    "searxng": {
-      "command": "npx",
-      "args": ["-y", "mcp-searxng"],
-      "env": { "SEARXNG_URL": "http://localhost:58080" },
-      "type": "stdio",
-      "alwaysAllow": ["searxng_web_search", "web_url_read"]
-    },
-    "tavily": {
-      "command": "npx",
-      "args": ["-y", "tavily-mcp"],
-      "env": { "TAVILY_API_KEY": "add your own" },
-      "alwaysAllow": ["tavily_search", "tavily_extract", "tavily_crawl", "tavily_map", "tavily_research"]
     }
   }
 }
