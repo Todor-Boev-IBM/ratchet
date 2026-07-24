@@ -1,20 +1,35 @@
 # Setup
 
-## 1. Merge Bob configuration into your `.bob` directory
+## 1. Install Bob configuration
 
-The `bob/` directory in this repo mirrors the structure of the `.bob` directory Bob reads from your home folder (`~/.bob`). Copy or merge the contents:
+Run the installer from the repo root:
 
 ```sh
-cp -r bob/rules/*    ~/.bob/rules/
-cp -r bob/skills/*   ~/.bob/skills/
-cp -r bob/.ratchet   ~/.bob/.ratchet
-cp    bob/settings/mcp.json          ~/.bob/settings/mcp.json
-cp    bob/settings/custom_modes.yaml ~/.bob/settings/custom_modes.yaml
+./install.sh [TARGET_DIR]
 ```
 
-If you already have existing files in `~/.bob/settings/`, merge manually rather than overwriting — particularly `mcp.json` and `custom_modes.yaml`.
+`TARGET_DIR` defaults to `~/.bob`. Pass a different path to install elsewhere.
 
-Update `mcp.json` with your own credentials where indicated (e.g. replace `"add your own"` in the Tavily entry with a real API key).
+What the installer does:
+- Copies all skills from `bob/skills/` into `<TARGET>/skills/` (existing skill directories are updated in-place)
+- Merges custom modes from `bob/settings/custom_modes.yaml` into `<TARGET>/settings/custom_modes.yaml` — adds modes by slug, skips slugs already present
+- Writes `bob/rules/communication-style.md` into `<TARGET>/rules/`
+
+**Requires:** [`yq` v4](https://github.com/mikefarah/yq) for the mode merge step.
+
+### mcp.json (manual)
+
+`mcp.json` is intentionally excluded from the installer because it contains machine-specific paths and API keys. Merge it manually:
+
+```sh
+# view what ratchet adds
+cat bob/settings/mcp.json
+
+# then edit your existing file
+$EDITOR ~/.bob/settings/mcp.json
+```
+
+Update entries where indicated (e.g. replace `"add your own"` in the Tavily entry with a real API key).
 
 ## 2. Run SearXNG as a user systemd service (Linux)
 
