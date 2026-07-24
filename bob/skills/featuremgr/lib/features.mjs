@@ -19,10 +19,10 @@ import { join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { parseFrontmatter } from './markdown.mjs'
 
-// The closed vocabulary of feature statuses. `draft`/`active` are "open"
-// statuses Triage works on; `done`/`abandoned` retire a feature from the
+// The closed vocabulary of feature statuses. `draft`/`active`/`in-review` are
+// "open" statuses Triage works on; `done`/`abandoned` retire a feature from the
 // working list. This is the only stored state a feature carries.
-export const INTENTS = ['draft', 'active', 'done', 'abandoned']
+export const INTENTS = ['draft', 'active', 'in-review', 'done', 'abandoned']
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -193,7 +193,7 @@ export function validateFeatures(features) {
 // --- triage ------------------------------------------------------------------
 
 function isOpen(feature) {
-  return feature.status === 'draft' || feature.status === 'active'
+  return feature.status === 'draft' || feature.status === 'active' || feature.status === 'in-review'
 }
 
 function isComplete(feature) {
@@ -205,7 +205,7 @@ function bandLabel(index) {
   return `${index * 7}\u2013${(index + 1) * 7} days`
 }
 
-// The triage view: open-status features only (draft/active), ordered
+// The triage view: open-status features only (draft/active/in-review), ordered
 // oldest-touched first, grouped into one-week age bands. Because the input is
 // sorted oldest-first and bands are emitted in encounter order, the returned
 // buckets run stalest-first, and within each bucket entries are oldest-first.
@@ -239,4 +239,3 @@ export function ambientCounts(features, now = Date.now()) {
   }
   return { finishable, stale }
 }
-

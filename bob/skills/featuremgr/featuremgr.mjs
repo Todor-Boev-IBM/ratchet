@@ -9,8 +9,9 @@
 //                feature file — the index is the only output.
 //   • check    — read-only structural audit (feature.md present, title + status
 //                valid, at least one artifact, plan phases present).
-//   • triage   — read-only view of open features (draft/active), oldest-touched
-//                first in weekly age bands, for the Triage skill to consume.
+//   • triage   — read-only view of open features (draft/active/in-review),
+//                oldest-touched first in weekly age bands, for the Triage skill
+//                to consume.
 //
 // Model
 //   docs/
@@ -19,8 +20,8 @@
 //     features/<slug>/plan.md       -> optional (owned by create-plan / execute-plan)
 //   feature.md frontmatter (flat key: value pairs only, see lib/markdown.mjs):
 //     title: <string>    required, authored at init.
-//     status: <draft|active|done|abandoned>   the ONLY stored state. Written
-//                        by init (draft) and mark (transitions). Everything
+//     status: <draft|active|in-review|done|abandoned>   the ONLY stored state.
+//                        Written by init (draft) and mark (transitions). Everything
 //                        else (which artifacts exist, plan completion, last
 //                        touched) is derived, never written back.
 //   plan.md progress marker: a `## Phases` section whose `### Phase ...` sub-
@@ -28,10 +29,12 @@
 //     started) marker. Completion = `✅` phases over total `### Phase` headings.
 //
 // Status state machine and transition guards:
-//   draft   -> active    plan.md must exist with a ## Phases section
-//   draft   -> abandoned (no document precondition)
-//   active  -> done      all ### Phase headings in plan.md carry ✅
-//   active  -> abandoned (no document precondition)
+//   draft     -> active     plan.md must exist with a ## Phases section
+//   draft     -> abandoned  (no document precondition)
+//   active    -> in-review  all ### Phase headings in plan.md carry ✅
+//   active    -> abandoned  (no document precondition)
+//   in-review -> done       (no document precondition; human ratifies via triage)
+//   in-review -> abandoned  (no document precondition)
 //   done, abandoned -> any  REJECTED — terminal statuses are immutable
 //
 // File layout
@@ -54,7 +57,14 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseArgs as parseNodeArgs } from 'node:util'
-import { loadFeatures, validateFeatures, triageView, ambientCounts, derivePlanCompletion, INTENTS } from './lib/features.mjs'
+import {
+  loadFeatures,
+  validateFeatures,
+  triageView,
+  ambientCounts,
+  derivePlanCompletion,
+  INTENTS,
+} from './lib/features.mjs'
 import { renderIndex } from './lib/render.mjs'
 import { createFeatureFile, patchFrontmatter } from './lib/write.mjs'
 import { parseFrontmatter } from './lib/markdown.mjs'
@@ -67,14 +77,18 @@ function parseArgs(argv) {
   const { values, positionals } = parseNodeArgs({
     args: rest,
     options: {
-      docs:    { type: 'string', default: 'docs' },
-      out:     { type: 'string' },
-      title:   { type: 'string' },
+      docs: { type: 'string', default: 'docs' },
+      out: { type: 'string' },
+      title: { type: 'string' },
       purpose: { type: 'string' },
     },
     allowPositionals: true,
   })
-  return { cmd, positionals, opts: { docs: values.docs, out: values.out ?? null, title: values.title, purpose: values.purpose } }
+  return {
+    cmd,
+    positionals,
+    opts: { docs: values.docs, out: values.out ?? null, title: values.title, purpose: values.purpose },
+  }
 }
 
 // ---- helpers ----------------------------------------------------------------
@@ -182,7 +196,9 @@ function triage(docsDir) {
         : 'no plan phases'
       const flag = actionable ? ' [actionable]' : ''
       const archPending = feature.archMerged === null ? ' [arch-pending]' : ''
-      console.log(`  - ${feature.slug} (${feature.status}) — ${artifacts} — ${plan} — ${Math.floor(ageDays)}d${flag}${archPending}`)
+      console.log(
+        `  - ${feature.slug} (${feature.status}) — ${artifacts} — ${plan} — ${Math.floor(ageDays)}d${flag}${archPending}`,
+      )
     }
   }
   return 0
@@ -215,10 +231,12 @@ function cmdInit(positionals, opts) {
 // Allowed transitions. Each entry is [fromStatus, toStatus, checkFn].
 // checkFn(docsDir, slug) returns an error string or null.
 const TRANSITIONS = [
-  ['draft',  'active',    checkPlanReady],
-  ['draft',  'abandoned', null],
-  ['active', 'done',      checkPlanDone],
+  ['draft', 'active', checkPlanReady],
+  ['draft', 'abandoned', null],
+  ['active', 'in-review', checkPlanDone], // execution parks here after all phases ✅
   ['active', 'abandoned', null],
+  ['in-review', 'done', null], // human ratifies via triage
+  ['in-review', 'abandoned', null],
 ]
 
 function cmdMark(positionals, opts) {

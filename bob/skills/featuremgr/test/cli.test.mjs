@@ -207,6 +207,10 @@ function buildMarkFixture() {
     'feature.md': '---\ntitle: X\nstatus: done\n---\npurpose\n',
     'plan.md': '## Phases\n\n### Phase 1: one ✅\n',
   })
+  write('in-review-feat', {
+    'feature.md': '---\ntitle: IR\nstatus: in-review\n---\npurpose\n',
+    'plan.md': '## Phases\n\n### Phase 1: one ✅ 2026-07-18\n',
+  })
   return docs
 }
 
@@ -243,11 +247,11 @@ test('mark: draft -> active succeeds when plan.md has ## Phases', () => {
   rmSync(docs, { recursive: true, force: true })
 })
 
-test('mark: active -> done requires all phases ✅', () => {
+test('mark: active -> in-review requires all phases ✅', () => {
   const docs = buildMarkFixture()
   let failed = false
   try {
-    run(['mark', 'partial-done', 'done', '--docs', docs])
+    run(['mark', 'partial-done', 'in-review', '--docs', docs])
   } catch (err) {
     failed = true
     assert.equal(err.status, 1)
@@ -257,12 +261,44 @@ test('mark: active -> done requires all phases ✅', () => {
   rmSync(docs, { recursive: true, force: true })
 })
 
-test('mark: active -> done succeeds when all phases ✅', () => {
+test('mark: active -> in-review succeeds when all phases ✅', () => {
   const docs = buildMarkFixture()
-  const out = run(['mark', 'all-done', 'done', '--docs', docs])
-  assert.match(out, /all-done active -> done/)
+  const out = run(['mark', 'all-done', 'in-review', '--docs', docs])
+  assert.match(out, /all-done active -> in-review/)
   const content = readFileSync(join(docs, 'features', 'all-done', 'feature.md'), 'utf8')
+  assert.match(content, /status: in-review/)
+  rmSync(docs, { recursive: true, force: true })
+})
+
+test('mark: active -> done is now an invalid transition', () => {
+  const docs = buildMarkFixture()
+  let failed = false
+  try {
+    run(['mark', 'all-done', 'done', '--docs', docs])
+  } catch (err) {
+    failed = true
+    assert.equal(err.status, 1)
+    assert.match(err.stderr, /invalid transition/)
+  }
+  assert.ok(failed)
+  rmSync(docs, { recursive: true, force: true })
+})
+
+test('mark: in-review -> done succeeds (no doc precondition)', () => {
+  const docs = buildMarkFixture()
+  const out = run(['mark', 'in-review-feat', 'done', '--docs', docs])
+  assert.match(out, /in-review-feat in-review -> done/)
+  const content = readFileSync(join(docs, 'features', 'in-review-feat', 'feature.md'), 'utf8')
   assert.match(content, /status: done/)
+  rmSync(docs, { recursive: true, force: true })
+})
+
+test('mark: in-review -> abandoned succeeds', () => {
+  const docs = buildMarkFixture()
+  const out = run(['mark', 'in-review-feat', 'abandoned', '--docs', docs])
+  assert.match(out, /in-review-feat in-review -> abandoned/)
+  const content = readFileSync(join(docs, 'features', 'in-review-feat', 'feature.md'), 'utf8')
+  assert.match(content, /status: abandoned/)
   rmSync(docs, { recursive: true, force: true })
 })
 

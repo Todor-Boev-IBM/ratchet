@@ -192,6 +192,19 @@ test('triageView: open statuses only, oldest-first, weekly bands', () => {
   )
 })
 
+test('triageView: in-review features are open and appear in triage', () => {
+  const now = Date.now()
+  const features = [
+    feat({ slug: 'reviewing', status: 'in-review', lastTouched: now - 2 * DAY_MS }),
+    feat({ slug: 'act',       status: 'active',    lastTouched: now - 1 * DAY_MS }),
+    feat({ slug: 'closed',    status: 'done',       lastTouched: now - 5 * DAY_MS }),
+  ]
+  const slugs = triageView(features, now).flatMap(b => b.entries.map(e => e.feature.slug))
+  assert.ok(slugs.includes('reviewing'))
+  assert.ok(slugs.includes('act'))
+  assert.ok(!slugs.includes('closed'))
+})
+
 test('triageView: actionable when band age >= 1 or plan complete', () => {
   const now = Date.now()
   const features = [
@@ -232,5 +245,5 @@ test('ambientCounts: finishable and stale over open features only', () => {
 })
 
 test('INTENTS is the closed vocabulary', () => {
-  assert.deepEqual(INTENTS, ['draft', 'active', 'done', 'abandoned'])
+  assert.deepEqual(INTENTS, ['draft', 'active', 'in-review', 'done', 'abandoned'])
 })
