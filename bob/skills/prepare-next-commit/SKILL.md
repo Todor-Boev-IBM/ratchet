@@ -1,6 +1,6 @@
 ---
 name: prepare-next-commit
-version: "2.0"
+version: '2.0'
 description: Create the next atomic git commit from unstaged changes
 argument-hint: <project>
 metadata:
@@ -26,7 +26,7 @@ Run repeatedly until all changes are committed. Each invocation handles one logi
    - `git add <files>`
 4. Generate commit message
    - Follow Conventional Commit Format below
-   - Follow Style Guide below
+   - Follow Git Commit Message Style below
 5. Present to user
    - Show which files
    - Show proposed message
@@ -77,11 +77,8 @@ Files to commit:
   - path/to/file2.go
 
 Proposed commit message:
-```
+<subject line and optional body>
 
-[commit message in code block]
-
-```txt
 Summary: <2-3 sentence explanation of what changed>
 
 Commit type: <why you chose feat/fix/refactor/etc>
@@ -99,29 +96,7 @@ Should I proceed with this commit?
 - `<alternative message>` → Use custom message instead
 - Edit request → Regenerate and present again
 
-**After successful commit show:**
-
-```
-✓ Committed: <subject line>
-
-Remaining unstaged files:
-  - file3.go
-  - file4.md
-
-Run this command again to commit the next unit.
-```
-
-**If all changes committed:**
-
-```
-✓ All changes committed
-
-Recent commits:
-  - <commit 1>
-  - <commit 2>
-
-You can now push your changes.
-```
+Use the canonical post-commit output format in Status Reporting below.
 
 ## Conventional Commit Format
 
@@ -184,23 +159,22 @@ After each successful commit, show progress:
 ```txt
 ✓ Committed: <commit message subject line>
 
-Remaining unstaged changes:
+Remaining unstaged files:
   - path/to/file1.go
   - path/to/file2.md
   - path/to/file3_test.go
 
-Run this command again to commit the next atomic unit.
+Run this command again to commit the next unit.
 ```
 
 If all changes are committed:
 
 ```txt
-✓ All changes have been committed.
+✓ All changes committed
 
 Recent commits:
-  - <commit 1 subject>
-  - <commit 2 subject>
-  - <commit 3 subject>
+  - <commit 1>
+  - <commit 2>
 
 You can now push your changes.
 ```

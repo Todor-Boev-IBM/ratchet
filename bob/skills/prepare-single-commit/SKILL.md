@@ -1,6 +1,6 @@
 ---
 name: prepare-single-commit
-version: "2.0"
+version: '2.0'
 description: Stage all changes and create a single git commit
 argument-hint: <project>
 metadata:
@@ -16,8 +16,10 @@ Prepare a git commit for project $1.
 1. Check git status to identify all changed files
 2. Stage all changes using `git add .`
 3. Review git diff (staged) to understand the nature of changes
-4. Generate commit message following the style guide below
-5. Present the commit message to the user in this format:
+4. Generate commit message following the Git Commit Message Style below
+5. Present the commit to the user in this format:
+   - List the staged files being committed — `git add .` sweeps every modified and
+     untracked file under the project, so show the full list the user is approving
    - Show the proposed message in a code block
    - Briefly summarize what changed (2-3 sentences)
    - Explain why you chose this commit type

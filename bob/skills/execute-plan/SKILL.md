@@ -3,7 +3,7 @@ name: execute-plan
 description: >-
   Execute an implementation plan phase-by-phase, marking progress in the plan
   document
-argument-hint: <feature.md>
+argument-hint: <feature.md> [phase selector]
 metadata:
   disable-model-invocation: true
 ---
@@ -18,6 +18,10 @@ no `plan.md` with a `## Phases` section, **STOP** and report the problem — do 
 features for a plan and do not create one.
 
 Start from the first incomplete phase (or resume where progress markers indicate).
+
+The invocation may also carry a **phase selector** — explicit (`phase 3`, `phase 2a`) or
+relative (`next phase`). A selector means **run exactly that one phase, then stop for review**.
+With no selector, run every remaining phase to completion. Step 2 resolves both.
 
 ## Role
 
@@ -36,7 +40,7 @@ directly in the plan document so work can be resumed across sessions.
 3. Read each phase heading's status marker to determine where to resume
 4. Read architecture docs, project rules, and other references mentioned in the plan
 
-### Step 2: Determine Starting Point
+### Step 2: Determine Scope and Starting Point
 
 Scan the `### Phase` headings under `## Phases` for their marker emoji:
 
@@ -44,17 +48,35 @@ Scan the `### Phase` headings under `## Phases` for their marker emoji:
 - `⏳` — phase started but not finished (e.g. an interrupted run), resume here
 - no marker — not started
 
+**Starting phase.** If the invocation named an explicit phase, start there. Otherwise — including
+a relative selector like `next phase` — derive it:
+
 If every phase has `✅`, inform the user the plan is complete and exit.
 If a phase has `⏳`, resume from it — re-verify its partial work before continuing, since it
 may have been interrupted mid-flight.
 Otherwise, start from the first unmarked phase.
 
+**Scope.** A separate decision from the starting phase, and the one that governs when you stop:
+
+- **A selector was given** — explicit (`phase 3`) _or_ relative (`next phase`) — the scope is
+  **exactly one phase**. Resolving `next` into a concrete phase number does **not** widen the
+  scope: execute that single phase, then stop for review.
+- **No selector** — the scope is every remaining phase, run to completion.
+
+Announce the resolved scope along with the first phase, so the user can correct you before any
+work starts.
+
 ### Step 3: Execute Each Phase
 
-Before the first phase this session, set the feature's status to `active`
-(see Feature lifecycle below).
+Before the first phase this session, promote the feature to `active` (run from the repo root;
+the path is relative to this skill's own directory — `featuremgr` is a sibling skill under the
+same `skills/` root). `mark` is a no-op if it is already `active`:
 
-For each phase, in order:
+```
+node ../featuremgr/featuremgr.mjs mark <slug> active
+```
+
+For each phase in scope, in order:
 
 1. **Announce** — Tell the user which phase you're starting and its goals
 2. **Mark in-progress** — Append `⏳` to the phase heading in `plan.md`:
@@ -69,13 +91,26 @@ For each phase, in order:
    - Run tests, linters, or builds as appropriate
    - Fix issues that arise during implementation
 4. **Validate** — Check the phase's completion criteria from the plan
-5. **Mark completed** — Replace `⏳` with `✅` and the date, then reindex:
+5. **Mark completed** — Replace `⏳` with `✅` and the date:
    ```
    ### Phase 2: Core Logic ✅ 2026-07-19
    ```
+   then refresh the index:
+   ```
+   node ../featuremgr/featuremgr.mjs reindex
+   ```
 6. **Summarize** — Brief summary of what was done in this phase
 
+**If the scope is a single phase, do not roll into the next phase.** If phases remain, stop
+here — report what was done, name the phase that comes next so the user can resume, and hand
+back for review. But if that phase was the last one and every phase is now `✅`, continue to
+Step 4: finishing the plan always parks it for review, no matter how execution was scoped.
+
 ### Step 4: After All Phases
+
+Run this step whenever every phase is marked `✅`, **regardless of how execution was scoped** —
+a single-phase run that completes the final phase parks the plan for review just like a
+run-to-completion does. If phases remain unfinished, skip this step.
 
 When all phases are marked `✅`:
 
@@ -88,61 +123,21 @@ When all phases are marked `✅`:
    ```
    This hands off to the human for sign-off. Tell the user: "execution complete — run
    `/triage` to review and close this feature as `done`."
-   Do **not** call `mark done` or `mark abandoned` — those are triage's transitions from
-   `in-review`.
+   `mark in-review` enforces the precondition itself — it fails if any phase lacks `✅`, which
+   is a signal that validation was called prematurely.
 3. Summarize total work done
+
+Audit the feature tree at any time with `node ../featuremgr/featuremgr.mjs check`.
 
 ## Progress Marker Format
 
 The `## Phases` section is a strict contract between `create-plan`, `execute-plan`, and
-`featuremgr` — see [plan-phases](../featuremgr/plan-phases.md) for the full grammar. The
-two rules that matter while executing:
+`featuremgr` — see [plan-phases](../featuremgr/plan-phases.md) for the full grammar. Beyond
+the `⏳`/`✅` markers used in Step 3, one rule matters while executing: leave each phase's
+goal/deliverable prose untouched — only the heading marker changes.
 
-- Use `⏳` for in-progress and `✅` for done — these are what `featuremgr` parses. Place them
-  at the end of the heading before any date (e.g. `### Phase 2: Name ✅ 2026-07-19`).
-- Leave each phase's goal/deliverable prose untouched — only the heading marker changes.
+## Execution Rule
 
-## Execution Rules
-
-**Mark progress, don't skip it.** The primary purpose of this command is ensuring progress
-is tracked in the plan document. Never skip marking a phase (`⏳` on start, `✅` on finish)
-before moving to the next.
-
-**Validate before marking `✅`.** A phase is complete when its deliverable/validation
-criteria from the plan are met, not just when you've written code.
-
-## Resumption
-
-This command is designed to be invoked multiple times on the same plan:
-
-- First invocation: starts from Phase 1
-- Subsequent invocations: reads progress markers and resumes from last incomplete phase
-- If the plan is fully completed, it reports that and exits
-
-This makes it safe to interrupt and resume long plans across multiple sessions.
-
-## Feature lifecycle (featuremgr)
-
-A plan lives in a feature directory `docs/features/<slug>/`. The feature's status is managed
-exclusively by `featuremgr`. This skill calls it for two transitions (run from the repo root;
-`featuremgr` is a sibling skill under the same `skills/` root):
-
-- **On starting execution** — promote from `draft` to `active` if needed:
-
-  ```
-  node ../featuremgr/featuremgr.mjs mark <slug> active
-  ```
-
-  (`mark` is a no-op if already `active`.)
-
-- **On validated completion** — when every phase is `✅` and final validation passes:
-  ```
-  node ../featuremgr/featuremgr.mjs mark <slug> in-review
-  node ../featuremgr/featuremgr.mjs reindex
-  ```
-  `mark in-review` enforces the precondition — it will fail if any phase lacks `✅`, which
-  is a signal that validation was called prematurely. The feature stays at `in-review` until
-  the human closes it via `/triage`.
-
-Do **not** call `mark done` or `mark abandoned` — those are triage's transitions from
-`in-review`. Audit at any time with `node ../featuremgr/featuremgr.mjs check`.
+**Mark progress, don't skip it.** Tracking progress in the plan document is this command's
+primary purpose. Never move to the next phase without marking the current one (`⏳` on start,
+`✅` on finish), and never mark `✅` before the plan's validation criteria actually pass.

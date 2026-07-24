@@ -53,6 +53,7 @@ A proposal is a durable design record that:
 - Call out limitations and known trade-offs — don't sell
 - If the design has a rough edge, name it and explain why it's acceptable
 - Flag assumptions that could be wrong
+- No aspirational "future work" — either it's in scope or it's not
 
 ## When Given a Feature Discussion
 
@@ -202,26 +203,9 @@ The proposal should be:
 - **Honest** — Name limitations and trade-offs. A proposal that only lists benefits
   is a sales pitch, not a design document.
 
-## Critical Guidelines
+## Naming
 
-**DO:**
-
-- Show API contracts as real code (types, signatures, doc comments)
-- State design invariants explicitly ("the decision is immutable after claiming")
-- Include concrete examples for each variant of behavior
-- Name what doesn't change to bound the scope
-- Flag assumptions and limitations
-
-**DO NOT:**
-
-- Include implementation phases, steps, or sequencing
-- Enumerate files that will be modified
-- Describe testing strategy (that's planning)
-- Rehash the discussion — distill it
-- Include pseudo-code where real type definitions suffice
-- Write aspirational "future work" sections — either it's in scope or it's not
-
-**Naming:** The proposal file is always named `proposal.md`. Slug rules are in Step 3.
+The proposal file is always named `proposal.md`. Slug rules are in Step 3.
 
 ## Input
 
