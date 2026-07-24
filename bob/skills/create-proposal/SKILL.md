@@ -12,8 +12,8 @@ This command takes **no arguments**. Capture the design discussion from the curr
 into a proposal document.
 
 Store the proposal as `docs/features/<slug>/proposal.md`, alongside a `feature.md` anchor.
-Derive `<slug>` from the session and get the user to approve it before writing — see
-"Creating a new slug" and "Register the feature" below.
+Derive `<slug>` from the session and get the user to approve it before writing — the slug is
+resolved in Step 3 and the feature registered in Step 5.
 
 # Design Proposal Generator
 
@@ -83,10 +83,39 @@ Before writing, verify the discussion's assumptions. Ground yourself in two laye
 
 Flag discrepancies. Don't silently paper over them.
 
-### Step 3: Produce the Proposal
+### Step 3: Derive and Approve the Slug
 
-Write a structured markdown document. Use only the sections that apply — skip empty
-sections rather than writing "N/A".
+A new feature's slug is **derived from the session context**, never taken from a command
+argument. Read the session to identify the feature's essence, propose a lowercase-kebab-case
+slug (2–4 words) matching the style of existing directories under `docs/features/`, **present
+it to the user and get explicit approval** before writing anything, and honor a
+counter-proposal. The slug names what the session is about — a derivation, not a string the
+user typed. It becomes the `<slug>` you use to write and register the feature below.
+
+### Step 4: Produce the Proposal
+
+Write the proposal as `docs/features/<slug>/proposal.md`. It is pure content; give it a
+`title` and `type: proposal` in frontmatter, no status of its own, no H1 in the body. Use
+only the sections that apply (see "Proposal Structure" below) — skip empty sections rather
+than writing "N/A".
+
+### Step 5: Register the Feature
+
+Registration is part of the task, not an optional afterthought — an unregistered proposal is
+invisible to the rest of the lifecycle. Once the proposal is written (its slug approved in
+Step 3), register the feature with `featuremgr` (run from the repo root; the path is relative
+to this skill's own directory — `featuremgr` is a sibling skill under the same `skills/` root):
+
+```
+# Create the feature anchor at status: draft:
+node ../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
+
+# Rebuild the index:
+node ../featuremgr/featuremgr.mjs reindex
+```
+
+If any command fails or is not found, note the failure in chat and proceed — the proposal
+document is still valid without the registration step.
 
 ## Proposal Structure
 
@@ -192,7 +221,7 @@ The proposal should be:
 - Include pseudo-code where real type definitions suffice
 - Write aspirational "future work" sections — either it's in scope or it's not
 
-**Naming:** The proposal file is always named `proposal.md`. Slug rules are in "Creating a new slug" below.
+**Naming:** The proposal file is always named `proposal.md`. Slug rules are in Step 3.
 
 ## Input
 
@@ -203,33 +232,3 @@ the user which one to capture rather than guessing.
 If the session contains fewer than 3 concrete design decisions or lacks a clear problem
 statement, ask clarifying questions before writing. A proposal from an incomplete
 discussion is worse than no proposal.
-
-## Creating a new slug
-
-A new feature's slug is **derived from the session context**, never taken from a command
-argument. Read the session to identify the feature's essence, propose a lowercase-kebab-case
-slug (2–4 words) matching the style of existing directories under `docs/features/`, **present
-it to the user and get explicit approval** before creating anything, and honor a
-counter-proposal. The slug names what the session is about — a derivation, not a string the
-user typed.
-
-## Register the feature (featuremgr)
-
-A proposal lives inside a feature directory. When you write it:
-
-1. Write `proposal.md` as `docs/features/<slug>/proposal.md`. It is pure content; give it a
-   `title` and `type: proposal` in frontmatter, no status of its own, no H1 in the body.
-
-2. Register with `featuremgr` (run from the repo root; the path is relative to this skill's
-   own directory — `featuremgr` is a sibling skill under the same `skills/` root):
-
-   ```
-   # Create the feature anchor at status: draft:
-   node ../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
-
-   # Rebuild the index:
-   node ../featuremgr/featuremgr.mjs reindex
-   ```
-
-   If any command fails or is not found, note the failure in chat and proceed — the proposal
-   document is still valid without the registration step.

@@ -13,7 +13,7 @@ implementation plans optimized for execution by coding agents. You analyze featu
 and produce structured plans that guide incremental implementation without writing actual code.
 
 Derive the feature to plan from the user's request. Store the plan as
-`docs/features/<slug>/plan.md`, alongside a `feature.md` anchor (see "Register the plan" below).
+`docs/features/<slug>/plan.md`, alongside a `feature.md` anchor (registered in Step 6).
 
 ## Core Principles
 
@@ -37,7 +37,7 @@ Establish direction, constraints, and critical details — the plan sets the con
 
 ## Execution Flow
 
-Work through these four steps in order. Each step gates the next.
+Work through these six steps in order. Each step gates the next.
 
 ### Step 1: Research
 
@@ -94,13 +94,31 @@ the gap yourself.
 skipped one, the _why_ stays in this session by your choice. Either way, the plan itself will
 carry your agent-optimized version of it (Feature Overview, below). Proceed to Step 3.
 
-### Step 3: Write the Plan
+### Step 3: Resolve the Slug
 
-Produce the plan document with these sections in order: Feature Overview, Architecture Impact,
+The `<slug>` names the feature directory this plan is written into. How you obtain it depends
+on how this plan was invoked:
+
+- **Continuing an existing feature** — a proposal was written and
+  `docs/features/<slug>/feature.md` already exists. Reuse that slug exactly; do not invent a
+  new one, or the plan orphans itself from the proposal's feature.
+- **Planning straight from session context** — no proposal exists. Derive a
+  lowercase-kebab-case slug (2–4 words) from the session, matching the style of existing
+  directories under `docs/features/`, present it to the user and get explicit approval before
+  writing, and honor a counter-proposal.
+
+### Step 4: Write the Plan
+
+Write the plan as `docs/features/<slug>/plan.md`. It is pure content; give it a `title` and
+`type: plan` in frontmatter and no status of its own. Do not add an H1 title in the body —
+the title is already in the frontmatter. Its `## Phases` section (the per-phase `### Phase`
+headings) is the sole progress signal `featuremgr` reads.
+
+Produce the document with these sections in order: Feature Overview, Architecture Impact,
 API Changes, Critical Logic and Decisions, Testing Approach, Phases. Do not
-begin this step until Step 2 is complete and the why-grounding is confirmed.
+begin this step until Steps 2–3 are complete and the why-grounding is confirmed.
 
-### Step 4: Sweep for Blockers and Assumptions
+### Step 5: Sweep for Blockers and Assumptions
 
 After writing the plan, add two closing sections.
 
@@ -114,6 +132,29 @@ they slip past Open Questions and only surface later during reconciliation. A 30
 scan here kills a wrong default before it compounds into code. Be ruthless: list only genuine
 free choices a reasonable person could have made differently, not trivia the user obviously
 wanted.
+
+### Step 6: Register the Plan
+
+Registration is part of the task, not an optional afterthought — an unregistered plan never
+advances the feature's lifecycle. After the plan and its closing sections are written, register
+the feature with `featuremgr` (run from the repo root; the path is relative to this skill's own
+directory — `featuremgr` is a sibling skill under the same `skills/` root):
+
+```
+# If no feature.md exists yet, create it:
+node ../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
+
+# Transition to active (verifies plan.md exists and has ## Phases):
+node ../featuremgr/featuremgr.mjs mark <slug> active
+
+# Rebuild the index:
+node ../featuremgr/featuremgr.mjs reindex
+```
+
+If the feature was already created by `create-proposal` (feature.md exists at `draft`), skip
+`init` and go straight to `mark`. The `mark` command promotes `draft → active` after confirming
+the plan is ready. If any command fails or is not found, note the failure in chat and proceed
+— the plan document is still valid without the registration step.
 
 ---
 
@@ -237,7 +278,7 @@ refining a plan. Do not break phases into individual tasks or file-by-file chang
 
 #### 7. Open Questions
 
-List only questions that block starting implementation. Written during Step 4.
+List only questions that block starting implementation. Written during Step 5.
 
 - Question: [what must be resolved before coding begins]
 
@@ -245,7 +286,7 @@ If nothing is blocking, write: _None — implementation can proceed._
 
 #### 8. Assumptions
 
-Defaults you chose that the user did not specify. Written during Step 4. Each line names the
+Defaults you chose that the user did not specify. Written during Step 5. Each line names the
 choice and invites correction — none of these block implementation.
 
 - Assumed [X] because unspecified — change if wrong.
@@ -263,33 +304,3 @@ The plan should be:
 - **High-level** — direction and constraints, not detailed instructions
 - **Actionable** — clear phases with measurable completion criteria
 - **Minimal** — only critical details that must be decided upfront
-
-## Register the plan (featuremgr)
-
-A plan lives inside a feature directory. When you write it:
-
-1. Write `plan.md` as `docs/features/<slug>/plan.md`. It is pure content; give it a `title`
-   and `type: plan` in frontmatter and no status of its own. Its `## Phases` section (the
-   per-phase `### Phase` headings) is the sole progress signal `featuremgr` reads. Do not
-   add an H1 title in the body — the title is already in the frontmatter.
-
-2. Register with `featuremgr` (run from the repo root; the path is relative to this skill's
-   own directory — `featuremgr` is a sibling skill under the same `skills/` root):
-
-   ```
-   # If no feature.md exists yet, create it:
-   node ../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
-
-   # Transition to active (verifies plan.md exists and has ## Phases):
-   node ../featuremgr/featuremgr.mjs mark <slug> active
-
-   # Rebuild the index:
-   node ../featuremgr/featuremgr.mjs reindex
-   ```
-
-   If the feature was already created by `create-proposal` (feature.md exists at `draft`),
-   skip `init` and go straight to `mark`. The `mark` command promotes `draft → active`
-   after confirming the plan is ready.
-
-   If any command fails or is not found, note the failure in chat and proceed — the plan
-   document is still valid without the registration step.

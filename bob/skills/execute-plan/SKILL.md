@@ -79,15 +79,17 @@ For each phase, in order:
 
 When all phases are marked `✅`:
 
-1. Run final validation (tests, build, lint). **`done` requires this to pass** — all phases
-   `✅` plus green validation is the bar.
-2. Mark the feature done and rebuild the index (run from the repo root):
+1. Run final validation (tests, build, lint). **`in-review` requires this to pass** — all
+   phases `✅` plus green validation is the bar.
+2. Park the feature at `in-review` and rebuild the index (run from the repo root):
    ```
-   node ../featuremgr/featuremgr.mjs mark <slug> done
+   node ../featuremgr/featuremgr.mjs mark <slug> in-review
    node ../featuremgr/featuremgr.mjs reindex
    ```
-   This is the normal success terminal — the skill that executed and validated the work owns
-   the close. Do **not** call `mark abandoned`; that is triage's transition.
+   This hands off to the human for sign-off. Tell the user: "execution complete — run
+   `/triage` to review and close this feature as `done`."
+   Do **not** call `mark done` or `mark abandoned` — those are triage's transitions from
+   `in-review`.
 3. Summarize total work done
 
 ## Progress Marker Format
@@ -126,19 +128,21 @@ exclusively by `featuremgr`. This skill calls it for two transitions (run from t
 `featuremgr` is a sibling skill under the same `skills/` root):
 
 - **On starting execution** — promote from `draft` to `active` if needed:
+
   ```
   node ../featuremgr/featuremgr.mjs mark <slug> active
   ```
+
   (`mark` is a no-op if already `active`.)
 
 - **On validated completion** — when every phase is `✅` and final validation passes:
   ```
-  node ../featuremgr/featuremgr.mjs mark <slug> done
+  node ../featuremgr/featuremgr.mjs mark <slug> in-review
   node ../featuremgr/featuremgr.mjs reindex
   ```
-  The executor holds the ground truth that the work landed, so it owns the success close.
-  `mark done` enforces the precondition — it will fail if any phase lacks `✅`, which is a
-  signal that validation was called prematurely.
+  `mark in-review` enforces the precondition — it will fail if any phase lacks `✅`, which
+  is a signal that validation was called prematurely. The feature stays at `in-review` until
+  the human closes it via `/triage`.
 
-Do **not** call `mark abandoned` — that is triage's transition. Audit at any time with
-`node ../featuremgr/featuremgr.mjs check`.
+Do **not** call `mark done` or `mark abandoned` — those are triage's transitions from
+`in-review`. Audit at any time with `node ../featuremgr/featuremgr.mjs check`.
