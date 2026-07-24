@@ -61,15 +61,11 @@ function firstLine(body) {
 
 // Plan completion from the `## Phases` section inside a plan.md body. Each
 // `### Phase ...` sub-heading in that section is one phase; a phase counts as
-// done when its heading contains the text token `[done]` (`[wip]` = in
-// progress, no token = not started, neither of which is "done"). Any trailing
-// emoji after the token (e.g. `[done] ✅`) is decorative and ignored. Phases
-// elsewhere in the document are ignored. Returns `{ checked, total }`, or
-// `null` when there is no machine-readable signal (no `## Phases` section, or
-// one with no phase headings) — deliberately not `{ checked: 0, total: 0 }`,
-// so "no signal" is distinguishable from "0 done".
-const DONE_MARKER = '[done]'
-
+// done when its heading contains a `✅` emoji (`⏳` = in progress, no marker =
+// not started). Phases elsewhere in the document are ignored. Returns
+// `{ checked, total }`, or `null` when there is no machine-readable signal (no
+// `## Phases` section, or one with no phase headings) — deliberately not
+// `{ checked: 0, total: 0 }` so "no signal" is distinguishable from "0 done".
 export function derivePlanCompletion(planBody) {
   const lines = planBody.split(/\r?\n/)
   let inSection = false
@@ -91,7 +87,7 @@ export function derivePlanCompletion(planBody) {
     // `### Notes`) inside the section are not counted.
     if (!/^###\s+Phase\b/i.test(line)) continue
     total++
-    if (line.includes(DONE_MARKER)) checked++
+    if (line.includes('✅')) checked++
   }
   return total === 0 ? null : { checked, total }
 }

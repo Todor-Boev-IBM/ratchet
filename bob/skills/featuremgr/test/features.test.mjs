@@ -1,7 +1,7 @@
 // test/features.test.mjs
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, writeFileSync, utimesSync, rmSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
@@ -60,36 +60,33 @@ test('derivePlanCompletion: Phases section with no phase headings -> null', () =
 })
 
 test('derivePlanCompletion: mixed done, in-progress, and not-started', () => {
-  const body = '## Phases\n\n### Phase 1: A [done] ✅ 2026-07-19\n\n### Phase 2: B [wip] ⏳\n\n### Phase 3: C\n'
+  const body = '## Phases\n\n### Phase 1: A ✅ 2026-07-19\n\n### Phase 2: B ⏳\n\n### Phase 3: C\n'
   assert.deepEqual(derivePlanCompletion(body), { checked: 1, total: 3 })
 })
 
 test('derivePlanCompletion: all done', () => {
-  const body = '## Phases\n\n### Phase 1: A [done]\n\n### Phase 2: B [done] ✅ 2026-07-19\n'
+  const body = '## Phases\n\n### Phase 1: A ✅\n\n### Phase 2: B ✅ 2026-07-19\n'
   assert.deepEqual(derivePlanCompletion(body), { checked: 2, total: 2 })
 })
 
 test('derivePlanCompletion: ignores phases outside the Phases section', () => {
   const body =
-    '## Intro\n\n### Phase 0: stray [done]\n\n## Phases\n\n### Phase 1: real [done]\n### Phase 2: real\n\n## Notes\n\n### Phase 9: stray [done]\n'
+    '## Intro\n\n### Phase 0: stray ✅\n\n## Phases\n\n### Phase 1: real ✅\n### Phase 2: real\n\n## Notes\n\n### Phase 9: stray ✅\n'
   assert.deepEqual(derivePlanCompletion(body), { checked: 1, total: 2 })
 })
 
 test('derivePlanCompletion: non-phase sub-headings inside Phases are not counted', () => {
-  const body = '## Phases\n\n### Phase 1: A [done]\n\n### Notes\n\nsome note\n\n### Phase 2: B\n'
+  const body = '## Phases\n\n### Phase 1: A ✅\n\n### Notes\n\nsome note\n\n### Phase 2: B\n'
   assert.deepEqual(derivePlanCompletion(body), { checked: 1, total: 2 })
 })
 
 // --- deriveLastTouched -------------------------------------------------------
 
-test('deriveLastTouched: newest mtime among files, recursively', () => {
+test('deriveLastTouched: returns 0 for a directory with no git history', () => {
   const docs = tmpDocs()
   const dir = writeFeature(docs, 'a', { plan: '## Phases\n\n### Phase 1: x\n' })
-  const old = new Date('2020-01-01T00:00:00Z')
-  const recent = new Date('2026-06-01T00:00:00Z')
-  utimesSync(join(dir, 'feature.md'), old, old)
-  utimesSync(join(dir, 'plan.md'), recent, recent)
-  assert.equal(deriveLastTouched(dir), recent.getTime())
+  // A temp dir has no git history, so deriveLastTouched returns 0.
+  assert.equal(deriveLastTouched(dir), 0)
   rmSync(docs, { recursive: true, force: true })
 })
 
@@ -100,7 +97,7 @@ test('loadFeatures: parses status, title, artifacts, completion', () => {
   writeFeature(docs, 'alpha', {
     feature: '---\ntitle: "Alpha"\nstatus: active\n---\nDo alpha.\n',
     proposal: '# Alpha proposal\n',
-    plan: '## Phases\n\n### Phase 1: one [done]\n### Phase 2: two\n',
+    plan: '## Phases\n\n### Phase 1: one ✅\n### Phase 2: two\n',
   })
   const [f] = loadFeatures(docs)
   assert.equal(f.slug, 'alpha')
