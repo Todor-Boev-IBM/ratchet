@@ -1,65 +1,25 @@
-// lib/markdown.mjs
-//
-// Generic, docs-agnostic helpers for reading markdown files with YAML-style
-// frontmatter. Nothing in this file knows about "proposals" or "plans" —
-// it would work for any folder of *.md files. Think of it as the seam
-// between "code that could be an npm package" and "code that is specific
-// to how featuremgr organizes docs" (which stays in featuremgr.mjs).
-//
-// Why hand-rolled instead of real packages (e.g. `gray-matter` for
-// frontmatter, `fast-glob` for file discovery)? featuremgr is a small,
-// dependency-free script. The two functions below only need to handle the
-// narrow slice of YAML this repo actually uses — flat `key: value` lines,
-// no lists or nesting — so a full YAML parser wasn't worth adding
-// `node_modules` for. If frontmatter ever needs to hold something richer
-// than flat fields, swap this file out for those packages rather than
-// extending the regex below.
+// lib/markdown.mjs — reading markdown files with flat `key: value` frontmatter.
+// Docs-agnostic: knows nothing about "features". Hand-rolled (no gray-matter /
+// fast-glob) because featuremgr only needs flat frontmatter and stays
+// dependency-free; swap in real packages if frontmatter ever grows richer.
 
-import { readdirSync } from 'node:fs'
-import { join, extname } from 'node:path'
+import { readFileSync } from 'node:fs'
 
-/**
- * Recursively collect every `.md` file under `dir`.
- *
- * Returns an empty array if `dir` doesn't exist, instead of throwing, so
- * callers don't need to check "does docs/proposals even exist?" first.
- */
-export function walkMarkdownFiles(dir) {
-  // readdirSync throws if `dir` is missing — that's expected (e.g. a repo
-  // with no plans/ yet), so we just treat it as "no files here".
-  let entries
+// Read + parse a markdown file. Returns `{ data, body }`, or null if the file
+// can't be read — so callers branch on presence instead of each wrapping their
+// own try/catch around readFileSync.
+export function readMarkdown(path) {
   try {
-    entries = readdirSync(dir, { recursive: true, withFileTypes: true })
+    return parseFrontmatter(readFileSync(path, 'utf8'))
   } catch {
-    return []
+    return null
   }
-
-  return entries
-    .filter(entry => entry.isFile() && extname(entry.name) === '.md')
-    .map(entry => join(entry.parentPath, entry.name))
 }
 
-/**
- * Split a markdown file's text into its frontmatter fields and body.
- *
- * A file with frontmatter looks like this:
- *
- *   ---
- *   title: "Some Feature"
- *   status: active
- *   ---
- *   # The actual markdown content starts here
- *
- * This only understands flat `key: value` lines — it is NOT a general YAML
- * parser, just enough to read (and later rewrite) the couple of fields
- * featuremgr cares about.
- *
- * Returns `{ data, body }`:
- *   - `data` — a plain object of the parsed frontmatter fields
- *   - `body` — everything after the closing `---` fence
- * If the file has no frontmatter fence, `data` is `{}` and `body` is the
- * whole file unchanged.
- */
+// Split a markdown file's text into `{ data, body }`. `data` is the flat
+// `key: value` frontmatter fields (NOT general YAML — just what featuremgr
+// reads/rewrites); `body` is everything after the closing `---`. A file with
+// no frontmatter fence yields `{ data: {}, body: <whole file> }`.
 export function parseFrontmatter(text) {
   const lines = text.split(/\r?\n/)
 

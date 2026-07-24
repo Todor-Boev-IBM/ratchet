@@ -1,22 +1,16 @@
-// lib/render.mjs
-//
-// Turns a loaded feature set (see lib/features.mjs) into the docs/index.md
-// markdown: one section per status (in INTENTS order), each a table of the
-// features at that status with their derived facts — artifacts present, plan
-// completion, and last-touched date. Pure string building — no file I/O, no
-// knowledge of the CLI.
+// lib/render.mjs — turns a loaded feature set (see lib/features.mjs) into the
+// docs/index.md markdown: one section per status (in INTENTS order), each a
+// table of that status's features with their derived facts. Pure string
+// building — no file I/O, no knowledge of the CLI.
 
-import { INTENTS } from './features.mjs'
+import { INTENTS, artifactNames } from './features.mjs'
 
 function formatDate(ms) {
   return ms ? new Date(ms).toISOString().slice(0, 10) : '—'
 }
 
 function formatArtifacts(feature) {
-  const parts = []
-  if (feature.hasProposal) parts.push('proposal')
-  if (feature.hasPlan) parts.push('plan')
-  return parts.length ? parts.join(', ') : '—'
+  return artifactNames(feature).join(', ') || '—'
 }
 
 function formatCompletion(feature) {
@@ -45,7 +39,9 @@ export function renderIndex(features) {
     lines.push(`## ${status} (${rows.length})`, '')
     lines.push('| Feature | Artifacts | Plan | Arch Merged | Last touched |', '| --- | --- | --- | --- | --- |')
     for (const f of rows) {
-      lines.push(`| ${link(f)} | ${formatArtifacts(f)} | ${formatCompletion(f)} | ${f.archMerged ?? '—'} | ${formatDate(f.lastTouched)} |`)
+      lines.push(
+        `| ${link(f)} | ${formatArtifacts(f)} | ${formatCompletion(f)} | ${f.archMerged ?? '—'} | ${formatDate(f.lastTouched)} |`,
+      )
     }
     lines.push('')
   }

@@ -1,51 +1,21 @@
 #!/usr/bin/env node
 // featuremgr — lifecycle manager and index builder for a docs/features tree.
-// A feature is a directory docs/features/<slug>/ holding a required feature.md
-// anchor plus optional proposal.md / plan.md.
 //
-//   • init     — create a new feature directory + feature.md at status:draft.
-//   • mark     — transition a feature's status with precondition guards.
-//   • reindex  — regenerates docs/index.md from the features. Never writes a
-//                feature file — the index is the only output.
-//   • check    — read-only structural audit (feature.md present, title + status
-//                valid, at least one artifact, plan phases present).
-//   • triage   — read-only view of open features (draft/active/in-review),
-//                oldest-touched first in weekly age bands, for the Triage skill
-//                to consume.
+// A feature is a directory docs/features/<slug>/ with a required feature.md
+// anchor (the only place status is stored) plus optional proposal.md / plan.md.
+// Everything else — artifacts present, plan completion, last-touched — is
+// derived, never written back. See SKILL.md for the model and the status state
+// machine; the allowed transitions are encoded in TRANSITIONS below.
 //
-// Model
-//   docs/
-//     features/<slug>/feature.md    -> required anchor (owned exclusively by featuremgr)
-//     features/<slug>/proposal.md   -> optional (owned by create-proposal skill)
-//     features/<slug>/plan.md       -> optional (owned by create-plan / execute-plan)
-//   feature.md frontmatter (flat key: value pairs only, see lib/markdown.mjs):
-//     title: <string>    required, authored at init.
-//     status: <draft|active|in-review|done|abandoned>   the ONLY stored state.
-//                        Written by init (draft) and mark (transitions). Everything
-//                        else (which artifacts exist, plan completion, last
-//                        touched) is derived, never written back.
-//   plan.md progress marker: a `## Phases` section whose `### Phase ...` sub-
-//     headings each carry a `✅` (done) / `⏳` (in progress) / no emoji (not
-//     started) marker. Completion = `✅` phases over total `### Phase` headings.
+// Commands: init, mark, reindex, check, triage.
+// Layout: lib/markdown.mjs (read frontmatter) · lib/paths.mjs (on-disk layout) ·
+//   lib/features.mjs (model + derivations) · lib/transitions.mjs (status state
+//   machine) · lib/render.mjs (index.md) · lib/write.mjs (feature.md writes) ·
+//   this file (CLI: parse, dispatch, format/print).
 //
-// Status state machine and transition guards:
-//   draft     -> active     plan.md must exist with a ## Phases section
-//   draft     -> abandoned  (no document precondition)
-//   active    -> in-review  all ### Phase headings in plan.md carry ✅
-//   active    -> abandoned  (no document precondition)
-//   in-review -> done       (no document precondition; human ratifies via triage)
-//   in-review -> abandoned  (no document precondition)
-//   done, abandoned -> any  REJECTED — terminal statuses are immutable
-//
-// File layout
-//   lib/markdown.mjs  — generic helpers (find *.md files, parse frontmatter).
-//   lib/features.mjs  — the feature model: loading features, deriving plan
-//                       completion + last-touched, validation, triage view.
-//                       Reads but never writes.
-//   lib/render.mjs    — turns a loaded feature set into docs/index.md markdown.
-//   lib/write.mjs     — write-side operations on feature.md (init, mark).
-//   featuremgr.mjs (here) — CLI only: argv parsing, command dispatch, and the thin
-//                       commands that wire the model + render + I/O together.
+// Each command is a pure function returning `{ code, stdout?, stderr? }`; only
+// the entry point at the bottom prints and exits, so commands are unit-testable
+// without spawning a subprocess.
 //
 // Usage
 //   featuremgr init   <slug> --title <title> [--purpose <text>] [--docs <dir>]
@@ -56,19 +26,13 @@
 
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parseArgs as parseNodeArgs } from 'node:util'
-import {
-  loadFeatures,
-  validateFeatures,
-  triageView,
-  ambientCounts,
-  derivePlanCompletion,
-  INTENTS,
-} from './lib/features.mjs'
+import { loadFeatures, validateFeatures, triageView, ambientCounts, artifactNames, INTENTS } from './lib/features.mjs'
 import { renderIndex } from './lib/render.mjs'
 import { createFeatureFile, patchFrontmatter } from './lib/write.mjs'
-import { parseFrontmatter } from './lib/markdown.mjs'
-import { readFileSync } from 'node:fs'
+import { evaluateTransition } from './lib/transitions.mjs'
+import { featureFile } from './lib/paths.mjs'
 
 // ---- args -------------------------------------------------------------------
 
@@ -93,68 +57,14 @@ function parseArgs(argv) {
 
 // ---- helpers ----------------------------------------------------------------
 
-function featureDir(docsDir, slug) {
-  return join(docsDir, 'features', slug)
-}
-
-function featureFile(docsDir, slug) {
-  return join(featureDir(docsDir, slug), 'feature.md')
-}
-
-function planFile(docsDir, slug) {
-  return join(featureDir(docsDir, slug), 'plan.md')
-}
-
-// Read the current status of a feature.md. Returns null if the file is missing
-// or has no status field.
-function readStatus(featurePath) {
-  try {
-    const { data } = parseFrontmatter(readFileSync(featurePath, 'utf8'))
-    return data.status || null
-  } catch {
-    return null
-  }
-}
-
-// Verify that plan.md exists and has a ## Phases section with at least one
-// ### Phase heading. Returns an error string or null.
-function checkPlanReady(docsDir, slug) {
-  const planPath = planFile(docsDir, slug)
-  let planBody
-  try {
-    planBody = parseFrontmatter(readFileSync(planPath, 'utf8')).body
-  } catch {
-    return `plan.md not found: features/${slug}/plan.md`
-  }
-  const completion = derivePlanCompletion(planBody)
-  if (completion === null) {
-    return `plan.md has no ## Phases section with phase headings: features/${slug}/plan.md`
-  }
-  return null
-}
-
-// Verify that all phases in plan.md carry ✅. Returns an error string or null.
-function checkPlanDone(docsDir, slug) {
-  const planPath = planFile(docsDir, slug)
-  let planBody
-  try {
-    planBody = parseFrontmatter(readFileSync(planPath, 'utf8')).body
-  } catch {
-    return `plan.md not found: features/${slug}/plan.md`
-  }
-  const completion = derivePlanCompletion(planBody)
-  if (completion === null) {
-    return `plan.md has no ## Phases section: features/${slug}/plan.md`
-  }
-  if (completion.checked < completion.total) {
-    return `plan not complete: ${completion.checked}/${completion.total} phases done in features/${slug}/plan.md`
-  }
-  return null
-}
+// (Status reads and the transition state machine live in lib/transitions.mjs;
+// plan-completion parsing lives in lib/features.mjs.)
 
 // ---- commands -----------------------------------------------------------
+// Each command returns `{ code, stdout?, stderr? }`; the entry point prints and
+// exits. Commands may write to disk (index.md, feature.md) but never print.
 
-function reindex(docsDir, outFile) {
+export function reindex(docsDir, outFile) {
   const features = loadFeatures(docsDir)
   const { content, summary } = renderIndex(features)
 
@@ -162,57 +72,54 @@ function reindex(docsDir, outFile) {
   writeFileSync(out, content)
 
   const { finishable, stale } = ambientCounts(features)
-  console.log(`reindex: ${features.length} feature(s) -> ${out}`)
-  if (summary.length) console.log(summary.join('\n'))
-  console.log(`${finishable} finishable, ${stale} stale`)
+  const stdout = [`reindex: ${features.length} feature(s) -> ${out}`]
+  if (summary.length) stdout.push(...summary)
+  stdout.push(`${finishable} finishable, ${stale} stale`)
+  return { code: 0, stdout }
 }
 
-function check(docsDir) {
+export function check(docsDir) {
   const features = loadFeatures(docsDir)
   const problems = validateFeatures(features)
 
   if (problems.length === 0) {
-    console.log(`check: ${features.length} feature(s), no problems`)
-    return 0
+    return { code: 0, stdout: [`check: ${features.length} feature(s), no problems`] }
   }
-  console.log(`check: ${features.length} feature(s), ${problems.length} problem(s):`)
-  for (const p of problems.sort()) console.log(`  - ${p}`)
-  return 1
+  const stdout = [`check: ${features.length} feature(s), ${problems.length} problem(s):`]
+  for (const p of problems.sort()) stdout.push(`  - ${p}`)
+  return { code: 1, stdout }
 }
 
-function triage(docsDir) {
+export function triage(docsDir) {
   const features = loadFeatures(docsDir)
   const bands = triageView(features)
   const total = bands.reduce((n, band) => n + band.entries.length, 0)
 
-  console.log(`triage: ${total} open feature(s)`)
+  const stdout = [`triage: ${total} open feature(s)`]
   for (const band of bands) {
-    console.log(`\n## ${band.label}`)
+    stdout.push(`\n## ${band.label}`)
     for (const { feature, ageDays, actionable } of band.entries) {
-      const artifacts =
-        [feature.hasProposal && 'proposal', feature.hasPlan && 'plan'].filter(Boolean).join(', ') || 'no artifacts'
+      const artifacts = artifactNames(feature).join(', ') || 'no artifacts'
       const plan = feature.planCompletion
         ? `plan ${feature.planCompletion.checked}/${feature.planCompletion.total}`
         : 'no plan phases'
       const flag = actionable ? ' [actionable]' : ''
       const archPending = feature.archMerged === null ? ' [arch-pending]' : ''
-      console.log(
+      stdout.push(
         `  - ${feature.slug} (${feature.status}) — ${artifacts} — ${plan} — ${Math.floor(ageDays)}d${flag}${archPending}`,
       )
     }
   }
-  return 0
+  return { code: 0, stdout }
 }
 
-function cmdInit(positionals, opts) {
+export function cmdInit(positionals, opts) {
   const [slug] = positionals
   if (!slug) {
-    console.error('usage: featuremgr init <slug> --title <title> [--purpose <text>] [--docs <dir>]')
-    process.exit(2)
+    return { code: 2, stderr: ['usage: featuremgr init <slug> --title <title> [--purpose <text>] [--docs <dir>]'] }
   }
   if (!opts.title) {
-    console.error('featuremgr init: --title is required')
-    process.exit(2)
+    return { code: 2, stderr: ['featuremgr init: --title is required'] }
   }
 
   const path = featureFile(opts.docs, slug)
@@ -220,95 +127,63 @@ function cmdInit(positionals, opts) {
     createFeatureFile(path, { title: opts.title, purpose: opts.purpose })
   } catch (err) {
     if (err.code === 'EEXIST') {
-      console.error(`featuremgr init: ${err.message}`)
-      process.exit(1)
+      return { code: 1, stderr: [`featuremgr init: ${err.message}`] }
     }
     throw err
   }
-  console.log(`init: created features/${slug}/feature.md (status: draft)`)
+  return { code: 0, stdout: [`init: created features/${slug}/feature.md (status: draft)`] }
 }
 
-// Allowed transitions. Each entry is [fromStatus, toStatus, checkFn].
-// checkFn(docsDir, slug) returns an error string or null.
-const TRANSITIONS = [
-  ['draft', 'active', checkPlanReady],
-  ['draft', 'abandoned', null],
-  ['active', 'in-review', checkPlanDone], // execution parks here after all phases ✅
-  ['active', 'abandoned', null],
-  ['in-review', 'done', null], // human ratifies via triage
-  ['in-review', 'abandoned', null],
-]
-
-function cmdMark(positionals, opts) {
+// Allowed transitions and their preconditions live in lib/transitions.mjs;
+// cmdMark just asks evaluateTransition what to do and applies it.
+export function cmdMark(positionals, opts) {
   const [slug, toStatus] = positionals
   if (!slug || !toStatus) {
-    console.error('usage: featuremgr mark <slug> <status> [--docs <dir>]')
-    process.exit(2)
+    return { code: 2, stderr: ['usage: featuremgr mark <slug> <status> [--docs <dir>]'] }
   }
   if (!INTENTS.includes(toStatus)) {
-    console.error(`featuremgr mark: unknown status '${toStatus}' (allowed: ${INTENTS.join(', ')})`)
-    process.exit(2)
+    return { code: 2, stderr: [`featuremgr mark: unknown status '${toStatus}' (allowed: ${INTENTS.join(', ')})`] }
   }
 
-  const path = featureFile(opts.docs, slug)
-  const fromStatus = readStatus(path)
-
-  if (!fromStatus) {
-    console.error(`featuremgr mark: feature.md not found or has no status: features/${slug}/feature.md`)
-    process.exit(1)
+  const decision = evaluateTransition(opts.docs, slug, toStatus)
+  if (decision.action === 'reject') {
+    return { code: 1, stderr: [`featuremgr mark: ${decision.error}`] }
+  }
+  if (decision.action === 'noop') {
+    return { code: 0, stdout: [`mark: features/${slug} already has status '${decision.status}' — nothing to do`] }
   }
 
-  // Terminal-immutability guard.
-  if (fromStatus === 'done' || fromStatus === 'abandoned') {
-    console.error(`featuremgr mark: cannot transition from terminal status '${fromStatus}' (features/${slug})`)
-    process.exit(1)
-  }
-
-  // No-op: same status.
-  if (fromStatus === toStatus) {
-    console.log(`mark: features/${slug} already has status '${toStatus}' — nothing to do`)
-    return
-  }
-
-  const transition = TRANSITIONS.find(([from, to]) => from === fromStatus && to === toStatus)
-  if (!transition) {
-    console.error(`featuremgr mark: invalid transition ${fromStatus} -> ${toStatus} for features/${slug}`)
-    process.exit(1)
-  }
-
-  const [, , checkFn] = transition
-  if (checkFn) {
-    const err = checkFn(opts.docs, slug)
-    if (err) {
-      console.error(`featuremgr mark: precondition failed — ${err}`)
-      process.exit(1)
-    }
-  }
-
-  patchFrontmatter(path, { status: toStatus })
-  console.log(`mark: features/${slug} ${fromStatus} -> ${toStatus}`)
+  patchFrontmatter(featureFile(opts.docs, slug), { status: toStatus })
+  return { code: 0, stdout: [`mark: features/${slug} ${decision.from} -> ${decision.to}`] }
 }
 
 // ---- main -------------------------------------------------------------------
 
-const { cmd, positionals, opts } = parseArgs(process.argv.slice(2))
-switch (cmd) {
-  case 'init':
-    cmdInit(positionals, opts)
-    break
-  case 'mark':
-    cmdMark(positionals, opts)
-    break
-  case 'reindex':
-    reindex(opts.docs, opts.out)
-    break
-  case 'check':
-    process.exit(check(opts.docs))
-    break
-  case 'triage':
-    process.exit(triage(opts.docs))
-    break
-  default:
-    console.error('usage: featuremgr <init|mark|reindex|check|triage> [--docs <dir>] [--out <file>]')
-    process.exit(2)
+// Dispatch a parsed command to its handler. Returns the command result
+// `{ code, stdout?, stderr? }`; unknown commands yield the top-level usage.
+export function dispatch(cmd, positionals, opts) {
+  switch (cmd) {
+    case 'init':
+      return cmdInit(positionals, opts)
+    case 'mark':
+      return cmdMark(positionals, opts)
+    case 'reindex':
+      return reindex(opts.docs, opts.out)
+    case 'check':
+      return check(opts.docs)
+    case 'triage':
+      return triage(opts.docs)
+    default:
+      return { code: 2, stderr: ['usage: featuremgr <init|mark|reindex|check|triage> [--docs <dir>] [--out <file>]'] }
+  }
+}
+
+// Run only when invoked as the entry script, so tests can import the commands
+// above without triggering argv parsing or process.exit.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const { cmd, positionals, opts } = parseArgs(process.argv.slice(2))
+  const result = dispatch(cmd, positionals, opts)
+  for (const line of result.stdout ?? []) console.log(line)
+  for (const line of result.stderr ?? []) console.error(line)
+  process.exit(result.code ?? 0)
 }

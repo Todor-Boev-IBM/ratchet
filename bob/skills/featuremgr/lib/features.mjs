@@ -1,23 +1,16 @@
-// lib/features.mjs
+// lib/features.mjs — the feature model.
 //
-// The feature model: what a "feature" is (a directory under docs/features/
-// holding a required feature.md anchor plus optional proposal.md / plan.md),
-// and the facts derived from it. A feature stores exactly one piece of state —
-// the `status` field on feature.md; everything else (which artifacts exist,
-// how far a plan has progressed, when the feature was last touched) is derived
-// here and never written back.
-//
-// This module reads but never writes. It reuses lib/markdown.mjs for the
-// frontmatter parse and knows nothing about the CLI or index rendering
-// (lib/render.mjs turns features into docs/index.md; featuremgr.mjs prints).
-//
-// Replaces the old proposal/plan model (pairing, per-doc status, frontmatter
-// repair) entirely — none of that survives here.
+// A "feature" is a directory under docs/features/ holding a required feature.md
+// anchor plus optional proposal.md / plan.md. feature.md stores exactly one
+// piece of state (`status`); everything else — artifacts present, plan
+// completion, last-touched — is derived here and never written back. This
+// module reads but never writes, and knows nothing about the CLI or rendering.
 
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { readdirSync, statSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
-import { parseFrontmatter } from './markdown.mjs'
+import { readMarkdown } from './markdown.mjs'
+import { featuresDir, featureDir, featureFile, planFile, proposalFile } from './paths.mjs'
 
 // The closed vocabulary of feature statuses. `draft`/`active`/`in-review` are
 // "open" statuses Triage works on; `done`/`abandoned` retire a feature from the
@@ -33,18 +26,6 @@ function fileExists(path) {
     return statSync(path).isFile()
   } catch {
     return false
-  }
-}
-
-// Every file directly under `dir`, recursively. Returns [] if `dir` is missing
-// so callers don't have to guard.
-function listFiles(dir) {
-  try {
-    return readdirSync(dir, { recursive: true, withFileTypes: true })
-      .filter(entry => entry.isFile())
-      .map(entry => join(entry.parentPath, entry.name))
-  } catch {
-    return []
   }
 }
 
@@ -92,15 +73,12 @@ export function derivePlanCompletion(planBody) {
   return total === 0 ? null : { checked, total }
 }
 
-// Run: git log -1 --format="%aI" -- <featureDir>
-// Returns ISO timestamp of newest commit touching any file under featureDir,
+// Run: git log -1 --format="%aI" -- <dir>
+// Returns ISO timestamp of newest commit touching any file under `dir`,
 // or 0 if git is unavailable or the directory has never been committed.
-export function deriveLastTouched(featureDir, repoRoot = resolve(featureDir, '../../..')) {
+export function deriveLastTouched(dir, repoRoot = resolve(dir, '../../..')) {
   try {
-    const result = spawnSync('git', ['log', '-1', '--format=%aI', '--', featureDir], {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    })
+    const result = spawnSync('git', ['log', '-1', '--format=%aI', '--', dir], { cwd: repoRoot, encoding: 'utf8' })
     const iso = result.stdout.trim()
     if (!iso) return 0 // never committed → unknown
     return new Date(iso).getTime()
@@ -111,37 +89,24 @@ export function deriveLastTouched(featureDir, repoRoot = resolve(featureDir, '..
 
 // --- loading -----------------------------------------------------------------
 
-function loadFeature(dir, slug, repoRoot) {
-  const featureFile = join(dir, 'feature.md')
-  let hasFeatureFile = true
-  let data = {}
-  let body = ''
-  try {
-    ;({ data, body } = parseFrontmatter(readFileSync(featureFile, 'utf8')))
-  } catch {
-    hasFeatureFile = false
-  }
+function loadFeature(docsDir, slug, repoRoot) {
+  const feature = readMarkdown(featureFile(docsDir, slug))
+  const { data, body } = feature ?? { data: {}, body: '' }
 
-  const hasProposal = fileExists(join(dir, 'proposal.md'))
-  const hasPlan = fileExists(join(dir, 'plan.md'))
-
-  let planCompletion = null
-  if (hasPlan) {
-    const { body: planBody } = parseFrontmatter(readFileSync(join(dir, 'plan.md'), 'utf8'))
-    planCompletion = derivePlanCompletion(planBody)
-  }
+  const hasPlan = fileExists(planFile(docsDir, slug))
+  const plan = hasPlan ? readMarkdown(planFile(docsDir, slug)) : null
 
   return {
     slug,
-    hasFeatureFile,
+    hasFeatureFile: feature !== null,
     title: data.title || null,
     status: data.status || null,
     archMerged: data['arch-merged'] ?? null,
     purpose: firstLine(body),
-    hasProposal,
+    hasProposal: fileExists(proposalFile(docsDir, slug)),
     hasPlan,
-    planCompletion,
-    lastTouched: deriveLastTouched(dir, repoRoot),
+    planCompletion: plan ? derivePlanCompletion(plan.body) : null,
+    lastTouched: deriveLastTouched(featureDir(docsDir, slug), repoRoot),
   }
 }
 
@@ -149,16 +114,15 @@ function loadFeature(dir, slug, repoRoot) {
 // attach derived facts. Pure read — no file is written. Sorted by slug for
 // stable output.
 export function loadFeatures(docsDir, repoRoot = resolve(docsDir, '..')) {
-  const featuresDir = join(docsDir, 'features')
   let entries
   try {
-    entries = readdirSync(featuresDir, { withFileTypes: true })
+    entries = readdirSync(featuresDir(docsDir), { withFileTypes: true })
   } catch {
     return []
   }
   return entries
     .filter(entry => entry.isDirectory())
-    .map(entry => loadFeature(join(featuresDir, entry.name), entry.name, repoRoot))
+    .map(entry => loadFeature(docsDir, entry.name, repoRoot))
     .sort((a, b) => a.slug.localeCompare(b.slug))
 }
 
@@ -191,6 +155,16 @@ export function validateFeatures(features) {
 }
 
 // --- triage ------------------------------------------------------------------
+
+// Human-readable artifact names present on a feature, in display order.
+// Shared by the index renderer and the triage view so both list artifacts
+// the same way.
+export function artifactNames(feature) {
+  const names = []
+  if (feature.hasProposal) names.push('proposal')
+  if (feature.hasPlan) names.push('plan')
+  return names
+}
 
 function isOpen(feature) {
   return feature.status === 'draft' || feature.status === 'active' || feature.status === 'in-review'

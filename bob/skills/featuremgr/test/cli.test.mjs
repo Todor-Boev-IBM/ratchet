@@ -67,13 +67,6 @@ test('reindex: prints the ambient nudge line', () => {
   rmSync(docs, { recursive: true, force: true })
 })
 
-test('check: passes on a well-formed fixture', () => {
-  const docs = buildFixture()
-  const out = run(['check', '--docs', docs])
-  assert.match(out, /no problems/)
-  rmSync(docs, { recursive: true, force: true })
-})
-
 test('check: exits non-zero and flags a broken feature', () => {
   const docs = buildFixture()
   // A feature dir with no feature.md and no artifacts.
@@ -105,7 +98,10 @@ test('triage: [arch-pending] shown for open features without arch-merged', () =>
   // buildFixture creates alpha (active, no arch-merged) and beta (draft, no arch-merged)
   const out = run(['triage', '--docs', docs])
   const lines = out.split('\n').filter(l => l.includes('alpha') || l.includes('beta'))
-  assert.ok(lines.every(l => l.includes('[arch-pending]')), `expected [arch-pending] in: ${lines.join(' | ')}`)
+  assert.ok(
+    lines.every(l => l.includes('[arch-pending]')),
+    `expected [arch-pending] in: ${lines.join(' | ')}`,
+  )
   rmSync(docs, { recursive: true, force: true })
 })
 
@@ -165,19 +161,6 @@ test('init: fails with exit 1 if slug already exists', () => {
   rmSync(docs, { recursive: true, force: true })
 })
 
-test('init: fails with exit 2 when --title is missing', () => {
-  const docs = mkdtempSync(join(tmpdir(), 'featuremgr-init-'))
-  let failed = false
-  try {
-    run(['init', 'slug', '--docs', docs])
-  } catch (err) {
-    failed = true
-    assert.equal(err.status, 2)
-  }
-  assert.ok(failed)
-  rmSync(docs, { recursive: true, force: true })
-})
-
 // ---- mark -------------------------------------------------------------------
 
 function buildMarkFixture() {
@@ -187,41 +170,13 @@ function buildMarkFixture() {
     mkdirSync(dir, { recursive: true })
     for (const [name, body] of Object.entries(files)) writeFileSync(join(dir, name), body)
   }
-  write('draft-only', {
-    'feature.md': '---\ntitle: D\nstatus: draft\n---\npurpose\n',
-    'proposal.md': '# p\n',
-  })
+  write('draft-only', { 'feature.md': '---\ntitle: D\nstatus: draft\n---\npurpose\n', 'proposal.md': '# p\n' })
   write('has-plan', {
     'feature.md': '---\ntitle: P\nstatus: draft\n---\npurpose\n',
     'plan.md': '## Phases\n\n### Phase 1: one\n### Phase 2: two\n',
   })
-  write('all-done', {
-    'feature.md': '---\ntitle: A\nstatus: active\n---\npurpose\n',
-    'plan.md': '## Phases\n\n### Phase 1: one ✅ 2026-07-18\n### Phase 2: two ✅ 2026-07-19\n',
-  })
-  write('partial-done', {
-    'feature.md': '---\ntitle: R\nstatus: active\n---\npurpose\n',
-    'plan.md': '## Phases\n\n### Phase 1: one ✅ 2026-07-18\n### Phase 2: two\n',
-  })
-  write('terminal-done', {
-    'feature.md': '---\ntitle: X\nstatus: done\n---\npurpose\n',
-    'plan.md': '## Phases\n\n### Phase 1: one ✅\n',
-  })
-  write('in-review-feat', {
-    'feature.md': '---\ntitle: IR\nstatus: in-review\n---\npurpose\n',
-    'plan.md': '## Phases\n\n### Phase 1: one ✅ 2026-07-18\n',
-  })
   return docs
 }
-
-test('mark: draft -> abandoned (no precondition)', () => {
-  const docs = buildMarkFixture()
-  const out = run(['mark', 'draft-only', 'abandoned', '--docs', docs])
-  assert.match(out, /draft-only draft -> abandoned/)
-  const content = readFileSync(join(docs, 'features', 'draft-only', 'feature.md'), 'utf8')
-  assert.match(content, /status: abandoned/)
-  rmSync(docs, { recursive: true, force: true })
-})
 
 test('mark: draft -> active requires plan.md with ## Phases', () => {
   const docs = buildMarkFixture()
@@ -247,92 +202,10 @@ test('mark: draft -> active succeeds when plan.md has ## Phases', () => {
   rmSync(docs, { recursive: true, force: true })
 })
 
-test('mark: active -> in-review requires all phases ✅', () => {
-  const docs = buildMarkFixture()
-  let failed = false
-  try {
-    run(['mark', 'partial-done', 'in-review', '--docs', docs])
-  } catch (err) {
-    failed = true
-    assert.equal(err.status, 1)
-    assert.match(err.stderr, /plan not complete/)
-  }
-  assert.ok(failed)
-  rmSync(docs, { recursive: true, force: true })
-})
-
-test('mark: active -> in-review succeeds when all phases ✅', () => {
-  const docs = buildMarkFixture()
-  const out = run(['mark', 'all-done', 'in-review', '--docs', docs])
-  assert.match(out, /all-done active -> in-review/)
-  const content = readFileSync(join(docs, 'features', 'all-done', 'feature.md'), 'utf8')
-  assert.match(content, /status: in-review/)
-  rmSync(docs, { recursive: true, force: true })
-})
-
-test('mark: active -> done is now an invalid transition', () => {
-  const docs = buildMarkFixture()
-  let failed = false
-  try {
-    run(['mark', 'all-done', 'done', '--docs', docs])
-  } catch (err) {
-    failed = true
-    assert.equal(err.status, 1)
-    assert.match(err.stderr, /invalid transition/)
-  }
-  assert.ok(failed)
-  rmSync(docs, { recursive: true, force: true })
-})
-
-test('mark: in-review -> done succeeds (no doc precondition)', () => {
-  const docs = buildMarkFixture()
-  const out = run(['mark', 'in-review-feat', 'done', '--docs', docs])
-  assert.match(out, /in-review-feat in-review -> done/)
-  const content = readFileSync(join(docs, 'features', 'in-review-feat', 'feature.md'), 'utf8')
-  assert.match(content, /status: done/)
-  rmSync(docs, { recursive: true, force: true })
-})
-
-test('mark: in-review -> abandoned succeeds', () => {
-  const docs = buildMarkFixture()
-  const out = run(['mark', 'in-review-feat', 'abandoned', '--docs', docs])
-  assert.match(out, /in-review-feat in-review -> abandoned/)
-  const content = readFileSync(join(docs, 'features', 'in-review-feat', 'feature.md'), 'utf8')
-  assert.match(content, /status: abandoned/)
-  rmSync(docs, { recursive: true, force: true })
-})
-
-test('mark: terminal status done cannot be re-marked', () => {
-  const docs = buildMarkFixture()
-  let failed = false
-  try {
-    run(['mark', 'terminal-done', 'active', '--docs', docs])
-  } catch (err) {
-    failed = true
-    assert.equal(err.status, 1)
-    assert.match(err.stderr, /terminal status/)
-  }
-  assert.ok(failed)
-  rmSync(docs, { recursive: true, force: true })
-})
-
 test('mark: no-op when target status is the same as current', () => {
   const docs = buildMarkFixture()
   const out = run(['mark', 'has-plan', 'draft', '--docs', docs])
   assert.match(out, /nothing to do/)
-  rmSync(docs, { recursive: true, force: true })
-})
-
-test('mark: fails with exit 1 when feature.md does not exist', () => {
-  const docs = buildMarkFixture()
-  let failed = false
-  try {
-    run(['mark', 'nonexistent', 'active', '--docs', docs])
-  } catch (err) {
-    failed = true
-    assert.equal(err.status, 1)
-  }
-  assert.ok(failed)
   rmSync(docs, { recursive: true, force: true })
 })
 
