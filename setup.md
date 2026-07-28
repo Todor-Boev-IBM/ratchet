@@ -31,6 +31,19 @@ $EDITOR ~/.bob/settings/mcp.json
 
 Update entries where indicated (e.g. replace `"add your own"` in the Tavily entry with a real API key).
 
+### codegraph index (per project)
+
+The `codegraph` MCP entry needs the `codegraph` binary on `PATH`. The server entry is global — `serve --mcp` takes the project root from the MCP client's `rootUri`, so it does not need a per-project `--path`.
+
+The **index** is per repository. Run once in each project you work in:
+
+```sh
+cd /path/to/project
+codegraph init
+```
+
+This creates `.codegraph/` (add it to `.gitignore`). Without it, codegraph tools report that the project is not initialized, and the Research mode falls back to reading files directly.
+
 ## 2. Run SearXNG as a user systemd service (Linux)
 
 The SearXNG MCP server expects a local SearXNG instance at `http://localhost:58080`. The `searxng/` directory contains a Docker Compose stack. On Linux, run it as a user-level systemd service so it starts automatically without root.
