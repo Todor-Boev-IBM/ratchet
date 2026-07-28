@@ -122,7 +122,7 @@ Optional scope: `feat(controller):` or `fix(reconciler):`
 
 Write commits that explain changes to other developers:
 
-**Good Example:**
+**Required Format:**
 
 ```txt
 refactor: use expectComponentsEventually/Consistently helpers in tests
@@ -132,6 +132,8 @@ refactor: use expectComponentsEventually/Consistently helpers in tests
 - Improve test readability across the suite
 ```
 
+The body **must** use bullet points (`- `). Prose paragraphs are not permitted. Each bullet covers one distinct reason, intent, or consequence. Aim for 2–4 bullets; fewer is fine if the change is simple enough to need only one.
+
 **Length Restrictions:**
 
 - **Subject line (first line):** 50 characters recommended, 72 characters maximum
@@ -139,6 +141,7 @@ refactor: use expectComponentsEventually/Consistently helpers in tests
 
 **Key Rules:**
 
+- **Body uses bullet points only** — never prose paragraphs, never continuous sentences spanning multiple lines without a leading `- `
 - **Explain WHAT and WHY, not HOW** - The diff shows the how
 - **Write like a human, not a report generator** - Humans don't count details
 - **Avoid in commit messages:**
