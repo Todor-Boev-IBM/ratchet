@@ -4,7 +4,7 @@ description: Internal tool bundle — not a standalone skill. Provides the featu
   CLI (init/mark/reindex/check/triage) that other ratchet skills invoke directly by sibling
   path.
 metadata:
-  internal: true
+  disable-model-invocation: true
 ---
 
 ## What this is
@@ -34,6 +34,7 @@ All commands accept `--docs <dir>` to target a non-default docs directory.
 Fails with exit 1 if the slug already exists. Pass `--purpose` for the one-line body text.
 
 **`mark <slug> <status>`** — Transition a feature's status with precondition guards:
+
 - `draft → active`: `plan.md` must exist with a `## Phases` section
 - `active → in-review`: all `### Phase` headings in `plan.md` must carry `✅`
 - `in-review → done`: no document precondition (phases proven at `active → in-review`)

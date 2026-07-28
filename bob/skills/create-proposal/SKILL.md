@@ -1,6 +1,6 @@
 ---
 name: create-proposal
-description: Distill a design discussion into a proposal document
+description: Distill research into a design proposal document
 argument-hint: ''
 metadata:
   disable-model-invocation: true
