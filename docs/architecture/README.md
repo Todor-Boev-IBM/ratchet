@@ -1,5 +1,7 @@
 # Ratchet Process
 
+> AI magnifies the developer you already are.
+
 ## Principles
 
 Three principles shape the ratchet workdlow.
@@ -50,9 +52,7 @@ Part of the work is to keep the gap small enough so they mostly complement rathe
 ## The arc of a feature
 
 A representative pass moves through four styles of work. Each uses a different interaction style and is suitable for
-a different class of model.
-
-> Bob routes requests through a model router rather than pinning a specific model, so output quality varies. The process prints the active model at the start of each phase so you can calibrate how much to trust the result.
+a different class of [model](#models).
 
 ![Ratchet Flow](architecture-flow.svg)
 
@@ -60,7 +60,8 @@ a different class of model.
 
 Chat style, requires a powerful model.
 
-Every session starts with an intent — research a topic, fix a bug, implement a feature.
+Every session starts with an intent — [research a topic](#tools), fix a bug, implement a feature.
+
 Within that goal the session may run long as both the human and agent understanding improves.
 Here you load the problem constraints into context and use the agent to discover blind spots, so the
 [Communication Style](../../bob/rules/communication-style.md) is critical.
@@ -83,17 +84,22 @@ The `/execute-plan` steps through the plan's phases. This is the slow part, and 
 
 Chat style, requires a powerful model.
 
-Completing execution leads straight into the recover-quality phase rather than deferring it:
+This is the knife's edge, where you invest in the next loop:
 
-- Review code by hand
-- Challenge the agent to explain and remove redundancies, reduce code
+- Reconcile to good quality and the next loop is easier — the code grows at a steady pace, you fight entropy.
+- Let quality slip and the next loop is harder - code deteriorates at an accelerating pace, you go along with entropy.
+
+Completing execution leads straight into this recover-quality phase rather than deferring it.
+This work requires judgement, suspicion, and experience to know what is "good enough".
+
+- Challenge the agent to explain code, remove redundancies, refactor to better patterns, explain edge cases.
 - Run the `Simplify` mode
-- Run `/identify-low-value-tests` - agents often create large amounts of near-useless tests
+- Run `/identify-low-value-tests` — agents often create large amounts of near-useless tests
 - Run `/reconcile-arch` to transfer completed architecture decisions to `/docs/architecture`
+- Use `/create-proposal` or `/create-plan` to capture discovered work for later.
 
-This is the loop's investment in the next one: the quality maintained here is what the agent imitates next time. It is also where the human repays the *comprehension debt* incurred by backgrounding execution — see [Running in parallel](#running-in-parallel).
-
-This is a natural point to drop into hand-coding. The agent produces code that hits the right APIs and has the structure you want; it is easier to start from that, clean it, and take it forward than to begin from scratch.
+This is a natural point to drop into hand-coding. The agent produces code that hits the right APIs and has the structure
+you want; it is easier to start from that, clean it, and take it forward rather than to begin from scratch.
 
 ### Commit
 
@@ -112,7 +118,7 @@ The tradeoffs we accept in order to maintain high rate of ideation are:
 - **Comprehension debt:**
   Backgrounding execution means the resulting code is not in your head as you work on something else.
   When the plan is done you no longer have good understanding of what the code does.
-  To mitigate this, [reconcile](#reconcile) cannot be deferred, unlike other phases.
+  This is why to mitigate this, [reconcile](#reconcile) cannot be deferred, unlike other phases.
   It is done right after execution while you still have some recent context from examining the plan and
   the agent has peak context because it is just out of executing the same plan.
 - **Abandoned work:**
@@ -135,3 +141,30 @@ arch-reconciled; not every feature warrants an architecture update. But the flag
 Throughout, a draw.io diagram can act as a shared, mutable workspace between you and the agent —
 a prompt you both reason about and evolve across turns. See [graphical prompting](graphical-prompting.md)
 for detail.
+
+## Models
+
+Bob routes requests through a model router rather than pinning a specific model, so output quality varies.
+The process prints the active model at the start of each phase so you can calibrate how much to trust the result.
+
+Here are some models observed in Bob 2.0 and how suffessfull they are with the ratchet skills:
+
+- **Claude Opus 4.5** - Good for everything. Excellent at Load and Capture.
+- **Claude Sonnet 4.5** - Good for Execute, Commit. Acceptable for Load and Capture.
+- **Claude Sonnet 3.5/3.7** - Good for Commit. Acceptable for Execute. Avoid for Load and Capture.
+- **GPT-5** - Good for Commit. Avoid for Load, Capture, Execute.
+
+## Tools
+
+Search tools are **criticallly important** to gound the research in truth.
+Also mitigates older model cut-off dates:
+
+- **ihor-sokoliuk/mcp-searxng** - Good for specializaed search (e.g. stack overlfow). Bad at general search. Free.
+- **tavily** - Best at general search. Payed.
+- **serper** - Good at geneal search. Payed.
+- **context7** - Best at library/code search. Payed.
+
+Code indexers are **very desirable**:
+
+- **codegraph**
+- **codebase-memory-mcp**

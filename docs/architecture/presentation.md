@@ -13,14 +13,14 @@ The specific problem this addresses:
 
 ## Evidence
 
-Eight 9 months of daily use, several codebases:
+In the period `Dec 2025 - Aug 2026` developed several codebases:
 
-| Project                    | Language   | LOC      | Journey                     |
-| -------------------------- | ---------- | -------- | --------------------------- |
-| Componator suite (7 repos) | Go         | ~40–60K  | Greenfield to Production    |
-| Audit IS Package           | Java       | ~5K      | Dirty to Improved           |
-| Angular app                | TS/Angular | ~60K     | Dirty to Greenfield Rewrite |
-| Toy flow visualizer        | TS/React   | ~2K      | Greenfield to Prototype     |
+| Project                              | Language   | LOC      | Journey                     |
+| ------------------------------------ | ---------- | -------- | --------------------------- |
+| Componator suite (7 repos)           | Go         | ~40–60K  | Greenfield to Production    |
+| wM Integration Server, Audit package | Java       | ~5K      | Dirty to Improved           |
+| Angular app                          | TS/Angular | ~60K     | Dirty to Greenfield Rewrite |
+| Toy flow language visualizer         | TS/React   | ~2K      | Greenfield to Prototype     |
 
 - Agent started **~95%** of the code.
 - Human share shrinks as the project matures.
