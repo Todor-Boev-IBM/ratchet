@@ -1,6 +1,4 @@
 ---
-status: open
-type: proposal
 title: "Feature-Centric Document Lifecycle"
 ---
 

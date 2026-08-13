@@ -1,14 +1,10 @@
 ---
-status: draft
-type: plan
 title: "Feature-Centric Document Lifecycle"
 ---
 
 # Feature-Centric Document Lifecycle
 
-**Status: ✅ COMPLETED** — 2026-07-19
-
-## 1. Feature Overview
+## Feature Overview
 
 Replace the parallel `docs/proposals/` + `docs/plans/` layout (paired by filename, each doc
 carrying its own status) with a per-feature directory `docs/features/<slug>/` holding a small
@@ -20,7 +16,7 @@ the closing `done`/`abandoned` decisions are made. This solves the real problem 
 portfolio that accumulates across parallel, out-of-order flows with no way to see what is at
 what stage.
 
-## 2. Architecture Impact
+## Architecture Impact
 
 - **The doc model is rewritten, not extended.** `lib/model.mjs` today encodes proposals,
   plans, pairing, cascade rules, and frontmatter repair. The feature model discards all of it:
@@ -42,7 +38,7 @@ what stage.
 - **Supersedes** the abandoned `tool-owned-frontmatter-lifecycle` plan, which centralized
   *more* mutation in the tool; this goes the other way — the tool mutates nothing but the index.
 
-## 3. API Changes
+## API Changes
 
 ### On-disk format (the real contract)
 
@@ -89,7 +85,7 @@ what stage.
 - `maintainFrontmatter`, `serializeDocFrontmatter` — the document write path.
 - Per-type `BUCKETS` and the plan-done→proposal-implemented cascade.
 
-## 4. Critical Logic and Decisions
+## Critical Logic and Decisions
 
 **Component: derivations (`lib/features.mjs`)**
 
@@ -146,7 +142,7 @@ Rules (report-only):
 - (warn) plan.md present but no "## Phases" section with phase headings  -> no completion signal
 ```
 
-## 5. Testing Approach
+## Testing Approach
 
 - **Unit (`lib/features.mjs`):** `derivePlanCompletion` (no section, section with no phase
   headings, mixed done/in-progress/not-started, phase headings outside `## Phases` ignored,
@@ -158,7 +154,7 @@ Rules (report-only):
 - Critical scenarios (names): read-only-reindex, finishable-detection, stale-banding,
   open-status-only-triage, completion-ignores-out-of-section-phases.
 
-## 6. Implementation Phases
+## Phases
 
 ### Phase 1: Feature model and read-only reindex ✅ 2026-07-19
 
@@ -194,7 +190,7 @@ Rules (report-only):
 - Verify `prepare-next-commit` / `prepare-single-commit` carry no triage logic.
 - Deliverable: a Triage session reconciles intents end-to-end; commit skills are unchanged.
 
-## 7. Open Questions
+## Open Questions
 
 None block implementation. Deferred by decision:
 
