@@ -109,10 +109,10 @@ to this skill's own directory — `featuremgr` is a sibling skill under the same
 
 ```
 # Create the feature anchor at status: draft:
-node ../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
+../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
 
 # Rebuild the index:
-node ../featuremgr/featuremgr.mjs reindex
+../featuremgr/featuremgr.mjs reindex
 ```
 
 If any command fails or is not found, note the failure in chat and proceed — the proposal

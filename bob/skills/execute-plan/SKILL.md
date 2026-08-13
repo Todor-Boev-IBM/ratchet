@@ -118,8 +118,8 @@ When all phases are marked `✅`:
    phases `✅` plus green validation is the bar.
 2. Park the feature at `in-review` and rebuild the index (run from the repo root):
    ```
-   node ../featuremgr/featuremgr.mjs mark <slug> in-review
-   node ../featuremgr/featuremgr.mjs reindex
+   ../featuremgr/featuremgr.mjs mark <slug> in-review
+   ../featuremgr/featuremgr.mjs reindex
    ```
    This hands off to the human for sign-off. Tell the user: "execution complete — run
    `/triage` to review and close this feature as `done`."
@@ -127,7 +127,7 @@ When all phases are marked `✅`:
    is a signal that validation was called prematurely.
 3. Summarize total work done
 
-Audit the feature tree at any time with `node ../featuremgr/featuremgr.mjs check`.
+Audit the feature tree at any time with `../featuremgr/featuremgr.mjs check`.
 
 ## Progress Marker Format
 

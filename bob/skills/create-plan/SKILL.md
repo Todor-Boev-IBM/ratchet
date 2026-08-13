@@ -143,13 +143,13 @@ directory — `featuremgr` is a sibling skill under the same `skills/` root):
 
 ```
 # If no feature.md exists yet, create it:
-node ../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
+../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
 
 # Transition to active (verifies plan.md exists and has ## Phases):
-node ../featuremgr/featuremgr.mjs mark <slug> active
+../featuremgr/featuremgr.mjs mark <slug> active
 
 # Rebuild the index:
-node ../featuremgr/featuremgr.mjs reindex
+../featuremgr/featuremgr.mjs reindex
 ```
 
 If the feature was already created by `create-proposal` (feature.md exists at `draft`), skip

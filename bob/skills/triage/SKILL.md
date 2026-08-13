@@ -47,7 +47,7 @@ path is relative to this skill's own directory — `featuremgr` is a sibling ski
 same `skills/` root:
 
 ```
-node ../featuremgr/featuremgr.mjs triage --docs <docs-dir>
+../featuremgr/featuremgr.mjs triage --docs <docs-dir>
 ```
 
 This prints the open features — `status: draft`, `active`, or `in-review` — ordered
@@ -87,9 +87,9 @@ For each `done`/`abandoned` decision, call `featuremgr mark` (run from the repo 
 `featuremgr` is a sibling skill under the same `skills/` root):
 
 ```
-node ../featuremgr/featuremgr.mjs mark <slug> done
+../featuremgr/featuremgr.mjs mark <slug> done
 # or:
-node ../featuremgr/featuremgr.mjs mark <slug> abandoned
+../featuremgr/featuremgr.mjs mark <slug> abandoned
 ```
 
 `in-review → done` has no doc precondition (phases were proven complete when `execute-plan`
@@ -102,7 +102,7 @@ blessing of unexecuted work. A `keep` (with no promotion) calls nothing.
 After all decisions are applied (from the repo root; same sibling-relative path as Step 1):
 
 ```
-node ../featuremgr/featuremgr.mjs reindex
+../featuremgr/featuremgr.mjs reindex
 ```
 
 Then summarize: how many features were kept, closed as `done`, and abandoned.

@@ -118,7 +118,7 @@ provenance timestamp to `feature.md`:
    arch-merged: <YYYY-MM-DD> # today's date
    ```
 
-2. Refresh the index: `node ../featuremgr/featuremgr.mjs reindex` (run from the repo root;
+2. Refresh the index: `../featuremgr/featuremgr.mjs reindex` (run from the repo root;
    the path is relative to this skill's own directory — `featuremgr` is a sibling skill
    under the same `skills/` root).
 
