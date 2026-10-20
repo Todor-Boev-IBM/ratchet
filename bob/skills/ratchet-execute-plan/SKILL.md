@@ -1,5 +1,5 @@
 ---
-name: execute-plan
+name: ratchet-execute-plan
 description: >-
   Execute an implementation plan phase-by-phase, marking progress in the plan
   document
@@ -69,11 +69,11 @@ work starts.
 ### Step 3: Execute Each Phase
 
 Before the first phase this session, promote the feature to `active` (run from the repo root;
-the path is relative to this skill's own directory — `featuremgr` is a sibling skill under the
+the path is relative to this skill's own directory — `ratchet-featuremgr` is a sibling skill under the
 same `skills/` root). `mark` is a no-op if it is already `active`:
 
 ```
-node ../featuremgr/featuremgr.mjs mark <slug> active
+node ../ratchet-featuremgr/featuremgr.mjs mark <slug> active
 ```
 
 For each phase in scope, in order:
@@ -97,7 +97,7 @@ For each phase in scope, in order:
    ```
    then refresh the index:
    ```
-   node ../featuremgr/featuremgr.mjs reindex
+   node ../ratchet-featuremgr/featuremgr.mjs reindex
    ```
 6. **Summarize** — Brief summary of what was done in this phase
 
@@ -118,21 +118,21 @@ When all phases are marked `✅`:
    phases `✅` plus green validation is the bar.
 2. Park the feature at `in-review` and rebuild the index (run from the repo root):
    ```
-   ../featuremgr/featuremgr.mjs mark <slug> in-review
-   ../featuremgr/featuremgr.mjs reindex
+   ../ratchet-featuremgr/featuremgr.mjs mark <slug> in-review
+   ../ratchet-featuremgr/featuremgr.mjs reindex
    ```
    This hands off to the human for sign-off. Tell the user: "execution complete — run
-   `/triage` to review and close this feature as `done`."
+   `/ratchet-triage` to review and close this feature as `done`."
    `mark in-review` enforces the precondition itself — it fails if any phase lacks `✅`, which
    is a signal that validation was called prematurely.
 3. Summarize total work done
 
-Audit the feature tree at any time with `../featuremgr/featuremgr.mjs check`.
+Audit the feature tree at any time with `../ratchet-featuremgr/featuremgr.mjs check`.
 
 ## Progress Marker Format
 
-The `## Phases` section is a strict contract between `create-plan`, `execute-plan`, and
-`featuremgr` — see [plan-phases](../featuremgr/plan-phases.md) for the full grammar. Beyond
+The `## Phases` section is a strict contract between `ratchet-create-plan`, `ratchet-execute-plan`, and
+`ratchet-featuremgr` — see [plan-phases](../ratchet-featuremgr/plan-phases.md) for the full grammar. Beyond
 the `⏳`/`✅` markers used in Step 3, one rule matters while executing: leave each phase's
 goal/deliverable prose untouched — only the heading marker changes.
 

@@ -1,10 +1,10 @@
 # Plan phase grammar
 
-Defines the `## Phases` contract in `plan.md` — authored by `create-plan`, marked by
-`execute-plan`, and read by `featuremgr` to derive completion.
+Defines the `## Phases` contract in `plan.md` — authored by `ratchet-create-plan`, marked by
+`ratchet-execute-plan`, and read by `ratchet-featuremgr` to derive completion.
 
 Plan progress is derived from the `plan.md` body — it is **never** copied into frontmatter.
-`featuremgr` reads exactly this shape:
+`ratchet-featuremgr` reads exactly this shape:
 
 ```markdown
 ## Phases

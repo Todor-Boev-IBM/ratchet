@@ -1,5 +1,5 @@
 ---
-name: reconcile-arch
+name: ratchet-merge-arch
 version: '2.0'
 description: >-
   Transfer architectural decisions from a completed feature into docs/architecture,
@@ -118,8 +118,8 @@ provenance timestamp to `feature.md`:
    arch-merged: <YYYY-MM-DD> # today's date
    ```
 
-2. Refresh the index: `../featuremgr/featuremgr.mjs reindex` (run from the repo root;
-   the path is relative to this skill's own directory — `featuremgr` is a sibling skill
+2. Refresh the index: `../ratchet-featuremgr/featuremgr.mjs reindex` (run from the repo root;
+   the path is relative to this skill's own directory — `ratchet-featuremgr` is a sibling skill
    under the same `skills/` root).
 
 3. Confirm to the human: "arch-merged stamped; index refreshed."

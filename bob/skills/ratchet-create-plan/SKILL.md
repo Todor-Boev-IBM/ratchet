@@ -1,5 +1,5 @@
 ---
-name: create-plan
+name: ratchet-create-plan
 description: Build an implementation plan for a coding agent
 argument-hint: '<feature>'
 metadata:
@@ -41,8 +41,7 @@ Work through these six steps in order. Each step gates the next.
 
 ### Step 1: Research
 
-**If relevant files and symbols are already in context from prior conversation turns, skip
-all tool calls and proceed directly to Step 2.**
+**If relevant files and symbols are already in context from prior conversation turns, skip all tool calls and proceed directly to Step 2.**
 
 Otherwise, choose the research method based on scope:
 
@@ -112,7 +111,7 @@ on how this plan was invoked:
 Write the plan as `docs/features/<slug>/plan.md`. It is pure content; give it a `title` and
 `type: plan` in frontmatter and no status of its own. Do not add an H1 title in the body —
 the title is already in the frontmatter. Its `## Phases` section (the per-phase `### Phase`
-headings) is the sole progress signal `featuremgr` reads.
+headings) is the sole progress signal `ratchet-featuremgr` reads.
 
 Produce the document with these sections in order: Feature Overview, Architecture Impact,
 API Changes, Critical Logic and Decisions, Testing Approach, Phases — each is specified in
@@ -138,21 +137,21 @@ wanted.
 
 Registration is part of the task, not an optional afterthought — an unregistered plan never
 advances the feature's lifecycle. After the plan and its closing sections are written, register
-the feature with `featuremgr` (run from the repo root; the path is relative to this skill's own
-directory — `featuremgr` is a sibling skill under the same `skills/` root):
+the feature with `ratchet-featuremgr` (run from the repo root; the path is relative to this skill's own
+directory — `ratchet-featuremgr` is a sibling skill under the same `skills/` root):
 
 ```
 # If no feature.md exists yet, create it:
-../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
+../ratchet-featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
 
 # Transition to active (verifies plan.md exists and has ## Phases):
-../featuremgr/featuremgr.mjs mark <slug> active
+../ratchet-featuremgr/featuremgr.mjs mark <slug> active
 
 # Rebuild the index:
-../featuremgr/featuremgr.mjs reindex
+../ratchet-featuremgr/featuremgr.mjs reindex
 ```
 
-If the feature was already created by `create-proposal` (feature.md exists at `draft`), skip
+If the feature was already created by `ratchet-create-proposal` (feature.md exists at `draft`), skip
 `init` and go straight to `mark`. The `mark` command promotes `draft → active` after confirming
 the plan is ready. If any command fails or is not found, note the failure in chat and proceed
 — the plan document is still valid without the registration step.
@@ -246,7 +245,7 @@ High-level only:
 #### 6. Phases
 
 Break work into 3–7 major phases, written as `### Phase <number>: Name` sub-headings under a
-`## Phases` container. The container heading text must begin with `Phases` so `featuremgr` can
+`## Phases` container. The container heading text must begin with `Phases` so `ratchet-featuremgr` can
 find it and derive completion; each phase is a `### Phase` heading with its goal and
 deliverable as prose beneath it:
 
@@ -270,11 +269,11 @@ Goals:
 Deliverable: ...
 ```
 
-Emit each phase heading with **no status marker** on creation. `execute-plan` adds the
+Emit each phase heading with **no status marker** on creation. `ratchet-execute-plan` adds the
 markers during execution: `⏳` when it starts a phase (the crash-recovery point) and `✅`
-plus the date when it finishes. `featuremgr` counts `✅` phases against the total number of
+plus the date when it finishes. `ratchet-featuremgr` counts `✅` phases against the total number of
 `### Phase` headings to derive completion. The exact grammar is in
-[plan-phases](../featuremgr/plan-phases.md). Subphases like `Phase 2a` are allowed when
+[plan-phases](../ratchet-featuremgr/plan-phases.md). Subphases like `Phase 2a` are allowed when
 refining a plan. Do not break phases into individual tasks or file-by-file changes.
 
 #### 7. Open Questions
