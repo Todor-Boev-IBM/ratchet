@@ -4,7 +4,6 @@
 
 Search tools are **critically important** to ground the research in truth and mitigate older model cut-off dates:
 
-- **ihor-sokoliuk/mcp-searxng** - Good for specialized search (e.g. stack overflow). Bad at general search. Free.
 - **tavily** - Best at general search. Paid.
 - **serper** - Good at general search. Paid.
 - **context7** - Best at library/code search. Paid.
