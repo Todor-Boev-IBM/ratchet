@@ -1,5 +1,5 @@
 ---
-name: prepare-single-commit
+name: ratchet-single-commit
 version: '2.0'
 description: Stage all changes and create a single git commit
 argument-hint: <project>

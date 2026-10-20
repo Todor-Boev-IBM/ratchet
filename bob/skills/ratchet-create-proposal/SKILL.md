@@ -1,5 +1,5 @@
 ---
-name: create-proposal
+name: ratchet-create-proposal
 description: Distill research into a design proposal document
 argument-hint: ''
 metadata:
@@ -25,7 +25,7 @@ each decision was made.
 A proposal is a durable design record that:
 
 - Captures decisions that emerged from discussion so they survive context loss
-- Serves as input to `create-plan` when it's time to implement
+- Serves as input to `ratchet-create-plan` when it's time to implement
 - Documents the "why" behind non-obvious choices for future readers
 - Establishes the scope boundary (what changes, what doesn't)
 
@@ -104,15 +104,15 @@ than writing "N/A".
 
 Registration is part of the task, not an optional afterthought — an unregistered proposal is
 invisible to the rest of the lifecycle. Once the proposal is written (its slug approved in
-Step 3), register the feature with `featuremgr` (run from the repo root; the path is relative
-to this skill's own directory — `featuremgr` is a sibling skill under the same `skills/` root):
+Step 3), register the feature with `ratchet-featuremgr` (run from the repo root; the path is relative
+to this skill's own directory — `ratchet-featuremgr` is a sibling skill under the same `skills/` root):
 
 ```
 # Create the feature anchor at status: draft:
-../featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
+../ratchet-featuremgr/featuremgr.mjs init <slug> --title "<Feature Title>"
 
 # Rebuild the index:
-../featuremgr/featuremgr.mjs reindex
+../ratchet-featuremgr/featuremgr.mjs reindex
 ```
 
 If any command fails or is not found, note the failure in chat and proceed — the proposal

@@ -71,7 +71,7 @@ Here you load the problem constraints into context and use the agent to discover
 
 Capture happens at the tail end of a Load session and inherits its model.
 
-When the context crystallizes, record it: `/create-proposal` for a design record worth doing, `/create-plan` for an
+When the context crystallizes, record it: `/ratchet-create-proposal` for a design record worth doing, `/ratchet-create-plan` for an
 implementation plan detailed enough for an agent to build against.
 
 Crystallization is often a deliberate step — asking the agent to summarize what has been discovered so far.
@@ -81,7 +81,7 @@ This both consolidates your understanding and primes the agent for the respectiv
 
 Batch-job style; can tolerate weaker models for simpler tasks.
 
-The `/execute-plan` steps through the plan's phases. You are free to start new Load sessions.
+The `/ratchet-execute-plan` steps through the plan's phases. You are free to start new Load sessions.
 
 When execution completes you must go directly to [reconcile](#reconcile) within the same agent session — don't defer.
 
@@ -98,9 +98,9 @@ This work requires judgement, suspicion, and experience to know what is "good en
 
 - Challenge the agent to explain code, remove redundancies, refactor to better patterns, explain edge cases.
 - Run the `Simplify` mode
-- Run `/identify-low-value-tests` — agents often create large amounts of near-useless tests
-- Run `/reconcile-arch` to transfer completed architecture decisions to `/docs/architecture`
-- Use `/create-proposal` or `/create-plan` to capture discovered work for later.
+- Run `/ratchet-prune-tests` — agents often create large amounts of near-useless tests
+- Run `/ratchet-merge-arch` to transfer completed architecture decisions to `/docs/architecture`
+- Use `/ratchet-create-proposal` or `/ratchet-create-plan` to capture discovered work for later.
 
 This is a natural point to drop into hand-coding. The agent produces code that hits the right APIs and has the structure
 you want; it is easier to start from that, clean it, and take it forward rather than to begin from scratch.
@@ -109,7 +109,7 @@ you want; it is easier to start from that, clean it, and take it forward rather 
 
 Chat style, suitable for weaker models.
 
-Use `/prepare-next-commit` and `/prepare-single-commit` to group changes into logical commits.
+Use `/ratchet-next-commit` and `/ratchet-single-commit` to group changes into logical commits.
 Commits summarize changes to the code, not features: one commit may span several features, or none cleanly.
 
 ## Running in parallel

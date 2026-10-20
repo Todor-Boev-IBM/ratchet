@@ -1,5 +1,5 @@
 ---
-name: triage
+name: ratchet-triage
 description: Prune open features — abandon dead ones and close stragglers execute-plan left open
 argument-hint: '[docs-dir]'
 metadata:
@@ -14,16 +14,16 @@ the decision to each feature's `feature.md`, then refresh the index.
 
 ## Role
 
-You are the feature portfolio's pruner. `execute-plan` parks completed features at
+You are the feature portfolio's pruner. `ratchet-execute-plan` parks completed features at
 `in-review` after all phases are validated — triage is where those features are ratified
-as `done`. Triage also retires dead work as `abandoned`. `featuremgr` derives what is
+as `done`. Triage also retires dead work as `abandoned`. `ratchet-featuremgr` derives what is
 finishable or stale but never closes anything itself — that judgment is made here, with
 the human present.
 
 ## Why this exists
 
-Features accumulate across parallel, out-of-order flows. `create-proposal` parks them as
-`draft`, `create-plan` makes them `active`, and `execute-plan` parks validated work at
+Features accumulate across parallel, out-of-order flows. `ratchet-create-proposal` parks them as
+`draft`, `ratchet-create-plan` makes them `active`, and `ratchet-execute-plan` parks validated work at
 `in-review`. Triage closes the loop: it ratifies `in-review` features as `done` and
 retires proposals that never became plans, plans that crashed mid-flight, and work that
 was quietly dropped. Without triage the portfolio only grows stale or stuck entries.
@@ -43,18 +43,18 @@ The full status state machine is enforced by `featuremgr mark`. The essentials f
 ### Step 1: Gather the open features
 
 Run the triage view from the repo root (pass the docs dir if not the default `docs`). The
-path is relative to this skill's own directory — `featuremgr` is a sibling skill under the
+path is relative to this skill's own directory — `ratchet-featuremgr` is a sibling skill under the
 same `skills/` root:
 
 ```
-../featuremgr/featuremgr.mjs triage --docs <docs-dir>
+../ratchet-featuremgr/featuremgr.mjs triage --docs <docs-dir>
 ```
 
 This prints the open features — `status: draft`, `active`, or `in-review` — ordered
 oldest-touched first, grouped into weekly age bands. Each line carries the derived facts: which artifacts
 exist, plan completion (`plan C/T`), age in days, an `[actionable]` flag (set when the plan's
 phases are all done, or the feature is at least a week untouched), and `[arch-pending]` until
-`reconcile-arch` has stamped `arch-merged`.
+`ratchet-merge-arch` has stamped `arch-merged`.
 
 If there are no open features, report that and stop.
 
@@ -74,7 +74,7 @@ Then ask the user to choose one of:
   plan, or a rejected `in-review`. Set `status: abandoned`.
 - **done** — the work is ratified. Use this for `in-review` features after the human confirms
   the execution landed correctly. Also use for the rare straggler `active` feature whose
-  `execute-plan` run was interrupted before it could park at `in-review` — confirm phases are
+  `ratchet-execute-plan` run was interrupted before it could park at `in-review` — confirm phases are
   all `✅` and validation passed before applying. Never use `done` to bless unexecuted work.
 
 Ask one feature at a time; do not batch. Lead with a recommendation for `[actionable]`
@@ -84,15 +84,15 @@ surface `abandoned`), but the user decides.
 ### Step 3: Apply decisions
 
 For each `done`/`abandoned` decision, call `featuremgr mark` (run from the repo root;
-`featuremgr` is a sibling skill under the same `skills/` root):
+`ratchet-featuremgr` is a sibling skill under the same `skills/` root):
 
 ```
-../featuremgr/featuremgr.mjs mark <slug> done
+../ratchet-featuremgr/featuremgr.mjs mark <slug> done
 # or:
-../featuremgr/featuremgr.mjs mark <slug> abandoned
+../ratchet-featuremgr/featuremgr.mjs mark <slug> abandoned
 ```
 
-`in-review → done` has no doc precondition (phases were proven complete when `execute-plan`
+`in-review → done` has no doc precondition (phases were proven complete when `ratchet-execute-plan`
 parked the feature). For a straggler `active` feature being closed as `done`, `mark` will
 enforce the all-phases-`✅` precondition and fail if it isn't met — preventing accidental
 blessing of unexecuted work. A `keep` (with no promotion) calls nothing.
@@ -102,7 +102,7 @@ blessing of unexecuted work. A `keep` (with no promotion) calls nothing.
 After all decisions are applied (from the repo root; same sibling-relative path as Step 1):
 
 ```
-../featuremgr/featuremgr.mjs reindex
+../ratchet-featuremgr/featuremgr.mjs reindex
 ```
 
 Then summarize: how many features were kept, closed as `done`, and abandoned.
@@ -110,7 +110,7 @@ Then summarize: how many features were kept, closed as `done`, and abandoned.
 ## Rules
 
 - **Triage owns `done` for `in-review` features and `abandoned` for any open feature.**
-  `execute-plan` parks work at `in-review` after validation; triage ratifies it. For a
+  `ratchet-execute-plan` parks work at `in-review` after validation; triage ratifies it. For a
   straggler `active` feature, `done` is mop-up only — `featuremgr mark` will reject it if
   phases are incomplete, preventing accidental blessing of unexecuted work.
 - **Never touch `feature.md` directly.** All status changes go through `featuremgr mark`.
